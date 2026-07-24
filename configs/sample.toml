@@ -1,0 +1,16 @@
+[experiment]
+name = "text-mvp-test"
+seed = 42
+
+[dataset]
+path = "./datasets/sample.jsonl"
+max_size_gb = 2.0
+
+[databases.postgres]
+enabled = true
+
+[databases.mongodb]
+enabled = true
+
+[databases.qdrant]
+enabled = true

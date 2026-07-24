@@ -1,0 +1,12 @@
+[package]
+name = "environment"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+benchmark_config = { path = "../config" }
+serde.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+sysinfo.workspace = true
