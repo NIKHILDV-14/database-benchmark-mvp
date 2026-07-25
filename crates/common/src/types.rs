@@ -100,3 +100,29 @@ pub struct VectorSearchResult {
     /// Metadata payload returned alongside the match.
     pub metadata: HashMap<String, serde_json::Value>,
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Embedding types
+// ──────────────────────────────────────────────────────────────────────────────
+
+/// Supported embedding providers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EmbeddingProviderType {
+    Dummy,
+    // Future providers (BGE, OpenAI, etc) would be added here
+}
+
+/// Metadata about the embedding model used.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EmbeddingModelInfo {
+    pub provider: EmbeddingProviderType,
+    pub name: String,
+    pub dimension: usize,
+}
+
+/// A raw dense vector produced by an embedding provider.
+#[derive(Debug, Clone)]
+pub struct EmbeddingResult {
+    pub vector: Vec<f32>,
+}

@@ -19,3 +19,11 @@ enabled = true
 
 [databases.lancedb]
 enabled = true
+
+[embedding]
+provider = "dummy"
+batch_size = 32
+chunk_size = 500
+chunk_overlap = 50
+cache_enabled = false
+dimension = 128

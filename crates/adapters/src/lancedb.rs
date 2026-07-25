@@ -39,7 +39,6 @@ use common::types::{
 };
 use dataset::model::Document;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use tracing::{debug, info};
 
 /// Default vector dimension when none is configured.
@@ -390,6 +389,7 @@ impl VectorAdapter for LanceDbAdapter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     fn make_config() -> DatabaseConfig {
         DatabaseConfig {

@@ -103,6 +103,14 @@ mod tests {
                     timeout_ms: None,
                 },
             },
+            embedding: benchmark_config::EmbeddingConfig {
+                provider: "dummy".to_string(),
+                batch_size: 32,
+                chunk_size: 500,
+                chunk_overlap: 50,
+                cache_enabled: false,
+                dimension: 128,
+            },
         };
 
         assert!(config.databases.postgres.enabled);

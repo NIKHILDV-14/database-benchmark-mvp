@@ -7,6 +7,7 @@ pub struct BenchmarkConfig {
     pub experiment: ExperimentConfig,
     pub dataset: DatasetConfig,
     pub databases: DatabasesConfig,
+    pub embedding: EmbeddingConfig,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -31,6 +32,16 @@ fn default_empty_text_policy() -> String {
 
 fn default_trim_whitespace() -> bool {
     true
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct EmbeddingConfig {
+    pub provider: String,
+    pub batch_size: usize,
+    pub chunk_size: usize,
+    pub chunk_overlap: usize,
+    pub cache_enabled: bool,
+    pub dimension: usize,
 }
 
 #[derive(Debug, Deserialize, Clone)]

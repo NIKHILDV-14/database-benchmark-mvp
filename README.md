@@ -54,6 +54,29 @@ To add support for a new database:
 ---
 
 
+## Embedding Architecture (Phase 4A)
+
+The project uses a dedicated, database-independent `embedding` crate to generate dense vectors. By separating embedding logic from the database adapters, we guarantee that all vector databases receive exactly the same input vectors, enabling a fair apples-to-apples comparison.
+
+### Provider Abstraction
+
+The `EmbeddingProvider` trait defines a generic interface for generating embeddings. Currently, a `DummyEmbeddingProvider` is implemented for deterministic testing without external dependencies. 
+
+Future phases will support real providers such as:
+- BGE / E5 (via local ONNX)
+- OpenAI / Cohere APIs
+- CLIP (for multimodal embeddings)
+- Whisper (audio)
+
+### Deterministic Chunking
+
+Documents are split into overlapping chunks before embedding. This process is fully deterministic:
+- Identical texts always produce identical chunks.
+- Chunk IDs are stable (`{document_id}_{chunk_index}`).
+- Original document metadata is preserved on every chunk.
+
+---
+
 ## Dataset Pipeline (Phase 2)
 
 ### Supported Formats
