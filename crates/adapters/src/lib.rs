@@ -1,6 +1,7 @@
 pub mod factory;
 pub mod lancedb;
 pub mod mongodb;
+pub mod pipeline;
 pub mod postgres;
 pub mod qdrant;
 pub mod traits;
