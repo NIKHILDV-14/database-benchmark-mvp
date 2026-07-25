@@ -28,6 +28,32 @@ A fair and reproducible benchmarking system for comparing PostgreSQL, MongoDB, a
 
 ---
 
+## Adapter Architecture (Phase 3A)
+
+The project uses a unified adapter architecture to benchmark multiple databases under a common interface.
+
+### Supported Databases
+
+- **PostgreSQL** — Relational database
+- **MongoDB** — Document NoSQL database
+- **Qdrant** — Vector database
+- **LanceDB** — Embedded vector database
+
+### Why Adapters?
+
+Adapters decouple the benchmarking engine from the specific APIs of each database. By implementing the `DatabaseAdapter` trait, any database can be seamlessly integrated into the benchmarking suite. The common interface ensures that operations like connecting, loading datasets, creating indexes, and executing queries are handled consistently, allowing for fair and reproducible comparisons.
+
+### How to Add a Future Adapter
+
+To add support for a new database:
+1. Add the database to the `DatabaseType` enum in the `common` crate.
+2. Add a configuration entry for the database in `DatabasesConfig` within the `config` crate.
+3. Create a new module in the `adapters` crate that implements the `DatabaseAdapter` trait.
+4. Update the `AdapterFactory` to return the new adapter when requested.
+
+---
+
+
 ## Dataset Pipeline (Phase 2)
 
 ### Supported Formats

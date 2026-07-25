@@ -3,6 +3,17 @@
 version = 4
 
 [[package]]
+name = "adapters"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "benchmark_config",
+ "common",
+ "dataset",
+ "thiserror",
+]
+
+[[package]]
 name = "ahash"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"

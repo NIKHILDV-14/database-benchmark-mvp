@@ -38,6 +38,7 @@ pub struct DatabasesConfig {
     pub postgres: DatabaseConfig,
     pub mongodb: DatabaseConfig,
     pub qdrant: DatabaseConfig,
+    pub lancedb: DatabaseConfig,
 }
 
 #[derive(Debug, Deserialize, Clone)]

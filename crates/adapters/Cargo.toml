@@ -1,0 +1,11 @@
+[package]
+name = "adapters"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+benchmark_config = { path = "../config" }
+dataset = { path = "../dataset" }
+thiserror.workspace = true
+anyhow.workspace = true

@@ -3,4 +3,5 @@ pub enum DatabaseType {
     Postgres,
     MongoDb,
     Qdrant,
+    LanceDb,
 }

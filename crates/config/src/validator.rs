@@ -20,6 +20,7 @@ impl ConfigValidator {
         if !config.databases.postgres.enabled
             && !config.databases.mongodb.enabled
             && !config.databases.qdrant.enabled
+            && !config.databases.lancedb.enabled
         {
             return Err(BenchmarkError::Validation(
                 "At least one database must be enabled".to_string(),

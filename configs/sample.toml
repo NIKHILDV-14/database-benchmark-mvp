@@ -16,3 +16,6 @@ enabled = true
 
 [databases.qdrant]
 enabled = true
+
+[databases.lancedb]
+enabled = true
