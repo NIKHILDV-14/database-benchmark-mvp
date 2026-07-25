@@ -45,7 +45,7 @@ mod tests {
     fn test_ordered_collection() {
         let mut collector = OrderedCollector::new();
 
-        let mut chunk1 = Chunk {
+        let chunk1 = Chunk {
             id: "1".to_string(),
             document_id: "doc".to_string(),
             text: "test".to_string(),
