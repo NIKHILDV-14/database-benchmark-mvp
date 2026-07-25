@@ -246,9 +246,9 @@ impl DatabaseAdapter for QdrantAdapter {
         self.build_vector_index(IndexType::HNSW, self.dimension)
     }
 
-    fn execute(&mut self, _query: &str) -> Result<()> {
+    fn execute(&mut self, _query: &str) -> Result<usize> {
         // Reserved for future query dispatch from the benchmark engine.
-        Ok(())
+        Ok(0)
     }
 
     fn cleanup(&mut self) -> Result<()> {
@@ -264,6 +264,10 @@ impl DatabaseAdapter for QdrantAdapter {
         })?;
         info!("Cleaned up Qdrant collection '{}'", self.collection);
         Ok(())
+    }
+
+    fn as_vector_adapter_mut(&mut self) -> Option<&mut dyn crate::vector_traits::VectorAdapter> {
+        Some(self)
     }
 }
 

@@ -139,12 +139,12 @@ impl DatabaseAdapter for MongoDbAdapter {
         Ok(())
     }
 
-    fn execute(&mut self, _query: &str) -> Result<()> {
+    fn execute(&mut self, _query: &str) -> Result<usize> {
         let coll = self.get_collection()?;
-        let _count = coll
+        let count = coll
             .count_documents(None, None)
             .map_err(|e| BenchmarkError::DatabaseConnection(format!("Query failed: {}", e)))?;
-        Ok(())
+        Ok(count as usize)
     }
 
     fn cleanup(&mut self) -> Result<()> {

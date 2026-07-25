@@ -258,9 +258,10 @@ impl DatabaseAdapter for LanceDbAdapter {
         self.build_vector_index(IndexType::HNSW, self.dimension)
     }
 
-    fn execute(&mut self, _query: &str) -> Result<()> {
+    fn execute(&mut self, _query: &str) -> Result<usize> {
         // Reserved for future query dispatch from the benchmark engine.
-        self.require_connected()
+        self.require_connected()?;
+        Ok(0)
     }
 
     fn cleanup(&mut self) -> Result<()> {
@@ -268,6 +269,10 @@ impl DatabaseAdapter for LanceDbAdapter {
         self.records.clear();
         info!("Cleaned up LanceDB table '{}'", self.table_name);
         Ok(())
+    }
+
+    fn as_vector_adapter_mut(&mut self) -> Option<&mut dyn crate::vector_traits::VectorAdapter> {
+        Some(self)
     }
 }
 

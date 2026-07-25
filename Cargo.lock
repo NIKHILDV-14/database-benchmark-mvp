@@ -397,6 +397,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
+name = "benchmark"
+version = "0.1.0"
+dependencies = [
+ "adapters",
+ "anyhow",
+ "benchmark_config",
+ "common",
+ "dataset",
+ "embedding",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "benchmark_config"
 version = "0.1.0"
 dependencies = [

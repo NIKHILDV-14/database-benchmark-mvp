@@ -141,13 +141,13 @@ impl DatabaseAdapter for PostgresAdapter {
         Ok(())
     }
 
-    fn execute(&mut self, _query: &str) -> Result<()> {
+    fn execute(&mut self, _query: &str) -> Result<usize> {
         let client = self.get_client()?;
         let rows = client
             .query("SELECT COUNT(*) FROM documents", &[])
             .map_err(|e| BenchmarkError::DatabaseConnection(format!("Query failed: {}", e)))?;
-        let _count: i64 = rows[0].get(0);
-        Ok(())
+        let count: i64 = rows[0].get(0);
+        Ok(count as usize)
     }
 
     fn cleanup(&mut self) -> Result<()> {

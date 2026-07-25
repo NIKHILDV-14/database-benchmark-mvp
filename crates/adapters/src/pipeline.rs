@@ -54,11 +54,10 @@ use std::sync::Arc;
 /// # Returns
 ///
 /// The number of `VectorRecord`s inserted, or an error.
-pub async fn embed_and_insert(
-    adapter: &mut dyn VectorAdapter,
+pub async fn embed_documents(
     documents: &[Document],
     config: &EmbeddingConfig,
-) -> Result<usize> {
+) -> Result<Vec<common::types::VectorRecord>> {
     // ── 1. Chunk ──────────────────────────────────────────────────────────────
     let chunks: Vec<_> = documents
         .iter()
@@ -66,7 +65,7 @@ pub async fn embed_and_insert(
         .collect();
 
     if chunks.is_empty() {
-        return Ok(0);
+        return Ok(vec![]);
     }
 
     // ── 2. Build orchestrator ─────────────────────────────────────────────────
@@ -89,6 +88,15 @@ pub async fn embed_and_insert(
         .await
         .context("Embedding orchestration failed")?;
 
+    Ok(records)
+}
+
+pub async fn embed_and_insert(
+    adapter: &mut dyn VectorAdapter,
+    documents: &[Document],
+    config: &EmbeddingConfig,
+) -> Result<usize> {
+    let records = embed_documents(documents, config).await?;
     let count = records.len();
 
     // ── 4. Insert into vector adapter ─────────────────────────────────────────

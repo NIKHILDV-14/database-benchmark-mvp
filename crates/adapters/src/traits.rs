@@ -10,6 +10,11 @@ pub trait DatabaseAdapter {
     fn capabilities(&self) -> DatabaseCapabilities;
     fn load_dataset(&mut self, dataset: &[Document]) -> Result<()>;
     fn build_indexes(&mut self) -> Result<()>;
-    fn execute(&mut self, query: &str) -> Result<()>;
+    fn execute(&mut self, query: &str) -> Result<usize>;
     fn cleanup(&mut self) -> Result<()>;
+
+    /// Optional downcast to VectorAdapter for vector-specific operations.
+    fn as_vector_adapter_mut(&mut self) -> Option<&mut dyn crate::vector_traits::VectorAdapter> {
+        None
+    }
 }
