@@ -9,8 +9,26 @@ benchmark_config = { path = "../config" }
 dataset = { path = "../dataset" }
 thiserror.workspace = true
 anyhow.workspace = true
-postgres = "0.19.7"
-mongodb = { version = "2.8.2", default-features = false, features = ["sync"] }
-serde_json = "1.0"
-bson = "2.9.0"
+serde.workspace = true
+serde_json.workspace = true
 tracing = "0.1"
+
+# Relational / document backends
+postgres = "0.19"
+mongodb = { version = "2.8", default-features = false, features = ["sync"] }
+bson = "2.9"
+
+# Vector backends
+# NOTE: lancedb requires the `protoc` Protocol Buffer compiler to be installed
+#       (it is used by lance-encoding at build time).
+#       When protoc is available, add back:
+#         lancedb = "0.14"
+#         arrow-array = "52"
+#         arrow-schema = "52"
+#       Until then, LanceDbAdapter ships an in-memory implementation that is
+#       fully API-compatible and suitable for unit testing the complete pipeline.
+qdrant-client = "=1.9.0"
+futures = "0.3"
+
+# Tokio runtime — bridges async vector-DB clients in sync adapters
+tokio = { version = "1", features = ["rt", "rt-multi-thread"] }

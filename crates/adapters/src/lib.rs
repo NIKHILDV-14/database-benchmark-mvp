@@ -4,6 +4,7 @@ pub mod mongodb;
 pub mod postgres;
 pub mod qdrant;
 pub mod traits;
+pub mod vector_traits;
 
 #[cfg(test)]
 mod tests {
@@ -108,31 +109,5 @@ mod tests {
         assert!(!config.databases.mongodb.enabled);
         assert!(!config.databases.qdrant.enabled);
         assert!(config.databases.lancedb.enabled);
-    }
-
-    #[test]
-    fn test_stub_adapters_return_errors() {
-        let config = DatabaseConfig {
-            enabled: true,
-            host: None,
-            port: None,
-            username: None,
-            password: None,
-            database: None,
-            pool_size: None,
-            timeout_ms: None,
-        };
-        let mut adapter = factory::AdapterFactory::get_adapter(DatabaseType::Qdrant, config);
-
-        let result = adapter.connect();
-        assert!(result.is_err());
-        if let Err(e) = result {
-            let msg = e.to_string();
-            assert!(
-                msg.contains("Not Yet Implemented"),
-                "Expected Not Yet Implemented error, got: {}",
-                msg
-            );
-        }
     }
 }
