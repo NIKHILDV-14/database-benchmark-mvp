@@ -5,6 +5,8 @@ seed = 42
 [dataset]
 path = "./datasets/sample.jsonl"
 max_size_gb = 2.0
+empty_text_policy = "reject"
+trim_whitespace = true
 
 [databases.postgres]
 enabled = true

@@ -1,0 +1,6 @@
+id,title,text,category
+doc_csv_1,PostgreSQL Overview,"PostgreSQL is an open-source relational database management system that uses SQL and extends it with additional features. It supports complex queries, foreign keys, triggers, views, and transactional integrity.",databases
+doc_csv_2,MongoDB Overview,"MongoDB is a document-oriented NoSQL database that stores records as BSON documents. It provides high scalability and flexibility for applications that require varied data formats.",databases
+doc_csv_3,Qdrant Vector Database,"Qdrant is a vector similarity search engine and database written in Rust. It supports filtering on payload fields alongside ANN search, making it suitable for hybrid semantic + structured queries.",databases
+doc_csv_4,Linear Regression,"Linear regression models the relationship between a dependent variable and one or more independent variables by fitting a linear equation. It is widely used for prediction and inference in statistics and machine learning.",machine learning
+doc_csv_5,TCP Protocol,"The Transmission Control Protocol provides reliable, ordered, and error-checked delivery of data between applications over IP networks. Connection establishment uses a three-way handshake.",networking

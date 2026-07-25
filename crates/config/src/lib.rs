@@ -19,6 +19,18 @@ pub struct ExperimentConfig {
 pub struct DatasetConfig {
     pub path: String,
     pub max_size_gb: f64,
+    #[serde(default = "default_empty_text_policy")]
+    pub empty_text_policy: String,
+    #[serde(default = "default_trim_whitespace")]
+    pub trim_whitespace: bool,
+}
+
+fn default_empty_text_policy() -> String {
+    "reject".to_string()
+}
+
+fn default_trim_whitespace() -> bool {
+    true
 }
 
 #[derive(Debug, Deserialize, Clone)]
