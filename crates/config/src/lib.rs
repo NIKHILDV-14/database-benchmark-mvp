@@ -44,6 +44,13 @@ pub struct DatabasesConfig {
 #[derive(Debug, Deserialize, Clone)]
 pub struct DatabaseConfig {
     pub enabled: bool,
+    pub host: Option<String>,
+    pub port: Option<u16>,
+    pub username: Option<String>,
+    pub password: Option<String>,
+    pub database: Option<String>,
+    pub pool_size: Option<u32>,
+    pub timeout_ms: Option<u64>,
 }
 
 impl BenchmarkConfig {

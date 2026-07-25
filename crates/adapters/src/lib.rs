@@ -25,16 +25,25 @@ mod tests {
 
     #[test]
     fn test_adapter_factory() {
+        let config = DatabaseConfig {
+            enabled: true,
+            host: None,
+            port: None,
+            username: None,
+            password: None,
+            database: None,
+            pool_size: None,
+            timeout_ms: None,
+        };
         let _pg: Box<dyn DatabaseAdapter> =
-            factory::AdapterFactory::get_adapter(DatabaseType::Postgres);
+            factory::AdapterFactory::get_adapter(DatabaseType::Postgres, config.clone());
         let _mgo: Box<dyn DatabaseAdapter> =
-            factory::AdapterFactory::get_adapter(DatabaseType::MongoDb);
+            factory::AdapterFactory::get_adapter(DatabaseType::MongoDb, config.clone());
         let _qdr: Box<dyn DatabaseAdapter> =
-            factory::AdapterFactory::get_adapter(DatabaseType::Qdrant);
+            factory::AdapterFactory::get_adapter(DatabaseType::Qdrant, config.clone());
         let _lnc: Box<dyn DatabaseAdapter> =
-            factory::AdapterFactory::get_adapter(DatabaseType::LanceDb);
+            factory::AdapterFactory::get_adapter(DatabaseType::LanceDb, config);
 
-        // They are all opaque trait objects, but we can verify construction didn't panic.
         assert!(true);
     }
 
@@ -52,10 +61,46 @@ mod tests {
                 trim_whitespace: true,
             },
             databases: DatabasesConfig {
-                postgres: DatabaseConfig { enabled: true },
-                mongodb: DatabaseConfig { enabled: false },
-                qdrant: DatabaseConfig { enabled: false },
-                lancedb: DatabaseConfig { enabled: true },
+                postgres: DatabaseConfig {
+                    enabled: true,
+                    host: None,
+                    port: None,
+                    username: None,
+                    password: None,
+                    database: None,
+                    pool_size: None,
+                    timeout_ms: None,
+                },
+                mongodb: DatabaseConfig {
+                    enabled: false,
+                    host: None,
+                    port: None,
+                    username: None,
+                    password: None,
+                    database: None,
+                    pool_size: None,
+                    timeout_ms: None,
+                },
+                qdrant: DatabaseConfig {
+                    enabled: false,
+                    host: None,
+                    port: None,
+                    username: None,
+                    password: None,
+                    database: None,
+                    pool_size: None,
+                    timeout_ms: None,
+                },
+                lancedb: DatabaseConfig {
+                    enabled: true,
+                    host: None,
+                    port: None,
+                    username: None,
+                    password: None,
+                    database: None,
+                    pool_size: None,
+                    timeout_ms: None,
+                },
             },
         };
 
@@ -67,7 +112,17 @@ mod tests {
 
     #[test]
     fn test_stub_adapters_return_errors() {
-        let mut adapter = factory::AdapterFactory::get_adapter(DatabaseType::Postgres);
+        let config = DatabaseConfig {
+            enabled: true,
+            host: None,
+            port: None,
+            username: None,
+            password: None,
+            database: None,
+            pool_size: None,
+            timeout_ms: None,
+        };
+        let mut adapter = factory::AdapterFactory::get_adapter(DatabaseType::Qdrant, config);
 
         let result = adapter.connect();
         assert!(result.is_err());
@@ -75,7 +130,7 @@ mod tests {
             let msg = e.to_string();
             assert!(
                 msg.contains("Not Yet Implemented"),
-                "Expected 'Not Yet Implemented', got: {}",
+                "Expected Not Yet Implemented error, got: {}",
                 msg
             );
         }
