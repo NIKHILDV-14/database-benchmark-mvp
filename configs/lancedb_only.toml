@@ -1,0 +1,29 @@
+[experiment]
+name = "lancedb-local-benchmark"
+seed = 42
+
+[dataset]
+path = "./datasets/sample.jsonl"
+max_size_gb = 2.0
+empty_text_policy = "reject"
+trim_whitespace = true
+
+[databases.postgres]
+enabled = false
+
+[databases.mongodb]
+enabled = false
+
+[databases.qdrant]
+enabled = false
+
+[databases.lancedb]
+enabled = true
+
+[embedding]
+provider = "dummy"
+batch_size = 32
+chunk_size = 500
+chunk_overlap = 50
+cache_enabled = false
+dimension = 128

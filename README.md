@@ -1,10 +1,26 @@
 # Database Benchmarking and Recommendation Tool MVP
 
-A fair and reproducible benchmarking system for comparing PostgreSQL, MongoDB, and Qdrant on real text workloads.
+A fair and reproducible benchmarking and recommendation system for comparing **PostgreSQL**, **MongoDB**, **Qdrant**, and **LanceDB** on text and vector workloads.
 
 ---
 
-## Setup
+## Quickstart
+
+### 1. Zero-Dependency Mode (LanceDB Embedded)
+
+To run the full end-to-end pipeline immediately without installing Docker or external database servers:
+
+```bash
+# Run the pipeline with the embedded LanceDB configuration
+cargo run -- configs/lancedb_only.toml
+
+# Or output the full results as structured JSON
+cargo run -- configs/lancedb_only.toml --json
+```
+
+### 2. Multi-Database Mode (PostgreSQL, MongoDB, Qdrant, LanceDB)
+
+To benchmark external databases alongside LanceDB:
 
 1. Copy the environment variables template:
    ```bash
@@ -16,226 +32,206 @@ A fair and reproducible benchmarking system for comparing PostgreSQL, MongoDB, a
    docker compose up -d
    ```
 
-3. Wait for all containers to report as healthy:
+3. Verify all containers are healthy:
    ```bash
    docker compose ps
    ```
 
-4. Build the project:
+4. Run the benchmark across all enabled databases:
    ```bash
-   cargo build
+   cargo run -- configs/sample.toml
    ```
 
----
-
-## Adapter Architecture (Phase 3A)
-
-The project uses a unified adapter architecture to benchmark multiple databases under a common interface.
-
-### Supported Databases
-
-- **PostgreSQL** — Relational database
-- **MongoDB** — Document NoSQL database
-- **Qdrant** — Vector database
-- **LanceDB** — Embedded vector database
-
-### Why Adapters?
-
-Adapters decouple the benchmarking engine from the specific APIs of each database. By implementing the `DatabaseAdapter` trait, any database can be seamlessly integrated into the benchmarking suite. The common interface ensures that operations like connecting, loading datasets, creating indexes, and executing queries are handled consistently, allowing for fair and reproducible comparisons.
-
-### How to Add a Future Adapter
-
-To add support for a new database:
-1. Add the database to the `DatabaseType` enum in the `common` crate.
-2. Add a configuration entry for the database in `DatabasesConfig` within the `config` crate.
-3. Create a new module in the `adapters` crate that implements the `DatabaseAdapter` trait.
-4. Update the `AdapterFactory` to return the new adapter when requested.
+> **Note on Service Availability:** If an external database container is not running, the tool will gracefully log the connection failure, mark that evaluation as invalid, and exclude it from the final recommendation with an explanatory diagnostic message, allowing healthy databases to still be benchmarked and ranked.
 
 ---
 
+## End-to-End Pipeline (Phase 8 Architecture)
 
-## Embedding Architecture (Phase 4A)
+The system connects all components in a unified, automated lifecycle:
 
-The project uses a dedicated, database-independent `embedding` crate to generate dense vectors. By separating embedding logic from the database adapters, we guarantee that all vector databases receive exactly the same input vectors, enabling a fair apples-to-apples comparison.
-
-### Provider Abstraction
-
-The `EmbeddingProvider` trait defines a generic interface for generating embeddings. Currently, a `DummyEmbeddingProvider` is implemented for deterministic testing without external dependencies. 
-
-Future phases will support real providers such as:
-- BGE / E5 (via local ONNX)
-- OpenAI / Cohere APIs
-- CLIP (for multimodal embeddings)
-- Whisper (audio)
-
-### Deterministic Chunking
-
-Documents are split into overlapping chunks before embedding. This process is fully deterministic:
-- Identical texts always produce identical chunks.
-- Chunk IDs are stable (`{document_id}_{chunk_index}`).
-- Original document metadata is preserved on every chunk.
-
----
-
-## Dataset Pipeline (Phase 2)
-
-### Supported Formats
-
-| Format | Extension | Notes |
-|--------|-----------|-------|
-| JSON Lines | `.jsonl` | One JSON object per line |
-| CSV | `.csv` | Requires `id` and `text` columns |
-
-### Canonical Document Schema
-
-All input datasets are normalised into a single internal representation before loading into any database:
-
-```json
-{
-  "id":       "unique-document-id",
-  "title":    "Optional title string",
-  "text":     "The main text content",
-  "metadata": { "any": "key-value pairs" }
-}
+```text
+┌─────────────────┐
+│ Dataset Loading │  (JSONL / CSV loading, schema validation, size limits, duplicate check)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ Preprocessing   │  (Line-ending normalization, whitespace trimming, deterministic SHA-256 hash)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ Workload Setup  │  (Canonical documents, query specs, environment hardware recording)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ Embedding       │  (Deterministic chunking, embedding orchestrator, vector record creation)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ Benchmark Exec  │  (Adapters: connect → initialize → load/insert → execute queries → cleanup)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ Evaluation      │  (Latency, throughput, success rate, validation rules, cross-db stats)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│ Recommendation  │  (Min-max normalization, configurable multi-criteria weights, rank & winner)
+└─────────────────┘
 ```
 
-- `id` — **required**, non-empty string, must be unique within the dataset
-- `title` — optional string
-- `text` — **required** string (empty-text behaviour is configurable)
-- `metadata` — arbitrary JSON object; preserved verbatim and serialised with sorted keys for deterministic hashing
+---
 
-### Sample JSONL Format
+## Workspace Crates
 
-```jsonl
-{"id": "doc_1", "title": "Introduction to Databases", "text": "A database is an organised collection of data.", "metadata": {"category": "databases"}}
-{"id": "doc_2", "title": "Machine Learning Basics", "text": "Machine learning uses data and algorithms to imitate how humans learn.", "metadata": {"category": "ml"}}
+The project is structured as a modular Rust workspace:
+
+| Crate | Purpose |
+|-------|---------|
+| `common` | Core types (`DatabaseType`, `VectorRecord`, `Capabilities`), shared errors, and utilities. |
+| `config` | Experiment, dataset, database, and embedding configuration models and validation. |
+| `dataset` | Streaming dataset loader (JSONL, CSV), schema validation, preprocessing, and SHA-256 hashing. |
+| `embedding` | Vector embedding pipeline: chunking, cache management, retry policy, and provider abstraction. |
+| `adapters` | Database adapters implementing `DatabaseAdapter` and `VectorAdapter` (PostgreSQL, MongoDB, Qdrant, LanceDB). |
+| `environment` | Hardware and OS environment recorder (CPU cores, memory, OS version, experiment UUID). |
+| `benchmark` | Workload definitions, adapter lifecycle execution runner, and raw metric collection. |
+| `evaluation` | Metric calculation, benchmark validation, cross-database aggregation, and evaluation reports. |
+| `recommendation` | Multi-criteria scoring, normalization, configurable weights, and database recommendation ranking. |
+| `runner` | End-to-end integration pipeline orchestrator (`BenchmarkPipeline`) and CLI executable (`runner`). |
+
+---
+
+## Execution & CLI Usage
+
+The `runner` crate serves as the primary practical entry point:
+
+```bash
+# Default run (uses configs/sample.toml)
+cargo run
+
+# Custom configuration file
+cargo run -- path/to/config.toml
+
+# Machine-readable JSON output
+cargo run -- path/to/config.toml --json
+
+# Help menu
+cargo run -- --help
 ```
 
-### Sample CSV Format
+### Programmatic API
 
-```csv
-id,title,text,category
-doc_1,Introduction to Databases,A database is an organised collection of data.,databases
-doc_2,Machine Learning Basics,Machine learning uses algorithms to imitate learning.,ml
+The pipeline can also be called directly from Rust code:
+
+```rust
+use runner::{BenchmarkPipeline, PipelineOptions};
+use benchmark_config::BenchmarkConfig;
+
+// Run from a file
+let result = BenchmarkPipeline::run_from_file("configs/lancedb_only.toml")?;
+
+// Or run with custom evaluation and recommendation weights
+let options = PipelineOptions::default();
+let result = BenchmarkPipeline::run_with_options(&config, &options)?;
+
+println!("Recommended database: {:?}", result.best_database());
+println!("{}", result.format_summary());
 ```
 
-Any column that is not `id`, `title`, or `text` is stored as a string value in the document's `metadata` map.
-
 ---
 
-## Validation Rules
+## Configuration Reference
 
-The pipeline enforces the following checks before accepting a dataset:
-
-1. **File existence** — the path must resolve to an existing file
-2. **Format** — extension must be `.jsonl` or `.csv`
-3. **Size limit** — file must not exceed `max_size_gb` (default 2 GB) in the config
-4. **Readable input** — any I/O error during streaming produces a structured error
-5. **Required `id`** — each record must have a non-empty `id` field after whitespace trimming
-6. **Unique IDs** — duplicate IDs produce an error identifying the offending ID
-7. **Required `text`** — the `text` field must be present and parse correctly
-8. **Empty-text policy** — controlled by `empty_text_policy`:
-   - `"reject"` (default) — empty text after preprocessing causes an error
-   - `"allow"` — empty text is accepted (useful for metadata-only workloads)
-9. **Line context** — errors include line or record numbers where practical
-
-Malformed records are **never silently skipped**.
-
----
-
-## Preprocessing
-
-Preprocessing is deterministic and minimal. The same rules are applied:
-- Before dataset validation and hashing
-- Before loading into any database (Phase 3+)
-- Before embedding generation (Phase 3+)
-
-| Setting | Config key | Default | Effect |
-|---------|-----------|---------|--------|
-| Normalise line endings | built-in | always | `\r\n` → `\n` |
-| Trim surrounding whitespace | `trim_whitespace` | `true` | Strips leading/trailing whitespace from `text` |
-
-Aggressive transformations (lower-casing, stemming, punctuation removal) are intentionally excluded to preserve semantic content and avoid biasing database-specific retrieval.
-
----
-
-## Deterministic Dataset Hashing
-
-Each processed dataset is assigned a SHA-256 fingerprint that identifies the **logical canonical content**, not filesystem properties such as path or modification time.
-
-**What is hashed (in order):**
-1. Preprocessing configuration (`empty_text_policy`, `trim_whitespace`)
-2. For each document (insertion order): `id`, `title`, `text`, `metadata`
-
-**Metadata key ordering:** metadata keys are sorted lexicographically before hashing so that `{"a":1,"b":2}` and `{"b":2,"a":1}` produce the same hash.
-
-**Document ordering:** hash is **order-sensitive** — two datasets with the same documents but different file ordering produce different hashes. This is intentional and reflects that document order may matter for retrieval evaluation.
-
----
-
-## Dataset Metadata
-
-`DatasetMetadata` is returned after successful validation and contains:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `path` | String | Dataset file path |
-| `format` | String | `"jsonl"` or `"csv"` |
-| `document_count` | usize | Number of accepted documents |
-| `original_size_bytes` | u64 | Raw file size in bytes |
-| `dataset_hash` | String | Hex SHA-256 fingerprint |
-| `empty_text_policy` | String | Policy used during validation |
-| `trim_whitespace` | bool | Trim setting used during validation |
-
----
-
-## Configuration
-
-Add dataset settings to your experiment TOML (e.g. `configs/sample.toml`):
+Example experiment configuration (`configs/sample.toml`):
 
 ```toml
+[experiment]
+name = "text-mvp-test"
+seed = 42
+
 [dataset]
-path             = "./datasets/sample.jsonl"
-max_size_gb      = 2.0
+path              = "./datasets/sample.jsonl"
+max_size_gb       = 2.0
 empty_text_policy = "reject"   # "reject" | "allow"
-trim_whitespace  = true
+trim_whitespace   = true
+
+[databases.postgres]
+enabled  = true
+host     = "localhost"
+port     = 5432
+username = "postgres"
+password = "postgres"
+database = "benchmark_db"
+
+[databases.mongodb]
+enabled  = true
+host     = "localhost"
+port     = 27017
+username = "mongo"
+password = "mongo"
+database = "benchmark_db"
+
+[databases.qdrant]
+enabled  = true
+host     = "localhost"
+port     = 6334
+database = "benchmark_vectors"
+
+[databases.lancedb]
+enabled  = true
+host     = "/tmp/lancedb_benchmark"
+database = "benchmark_vectors"
+
+[embedding]
+provider      = "dummy"        # "dummy" provides deterministic local vectors
+batch_size    = 32
+chunk_size    = 500
+chunk_overlap = 50
+cache_enabled = false
+dimension     = 128
 ```
 
-The fields `empty_text_policy` and `trim_whitespace` have serde defaults (`"reject"` and `true` respectively), so existing configs without these keys remain valid.
+---
+
+## Recommendation Engine (Phase 7)
+
+The recommendation engine scores and ranks eligible database candidates based on multi-criteria utility:
+
+- **Metrics Evaluated**:
+  - `latency`: insert and query latencies (lower is better: normalized as $(v_{\max} - v) / (v_{\max} - v_{\min})$).
+  - `throughput`: operations per second (higher is better: normalized as $(v - v_{\min}) / (v_{\max} - v_{\min})$).
+  - `accuracy`: precision, recall, and query F1 when ground truth is supplied (higher is better).
+  - `resource_usage`: memory and CPU usage when recorded (lower is better).
+- **Missing Metrics**: Handled dynamically without inventing arbitrary values; scores renormalize over observed dimensions.
+- **Exclusion**: Failed or invalid evaluations (e.g. database connection refused) are excluded with explicit diagnostic explanations.
+- **Tie-Breaking**: Ties in composite score are broken deterministically using alphabetical ordering of database identifiers.
 
 ---
 
 ## Running Tests
 
+All 185 workspace tests run in-memory and do **not** require external Docker containers:
+
 ```bash
-# All tests (unit + doc-tests)
+# Run all workspace tests (unit + integration + doc-tests)
 cargo test --workspace
 
-# Dataset crate only
-cargo test -p dataset
+# Run integration tests only
+cargo test -p runner --test integration_test
 
-# With output visible
-cargo test -p dataset -- --nocapture
+# Run recommendation tests only
+cargo test -p recommendation
+
+# Run evaluation tests only
+cargo test -p evaluation
 ```
 
-Tests do **not** require any running database. All test files are written to the OS temporary directory and cleaned up after each test.
-
 ---
 
-## Sample Datasets
+## Current Limitations
 
-| File | Format | Documents | Purpose |
-|------|--------|-----------|---------|
-| `datasets/sample.jsonl` | JSONL | 12 | Development testing (databases, ML, finance, networking, OS) |
-| `datasets/sample.csv` | CSV | 5 | CSV loader testing |
-
-> **⚠ Not for benchmarking:** These samples are too small for meaningful performance conclusions.
-> Use a realistic dataset (≥ tens of thousands of documents) for actual benchmarking.
-
----
-
-## Phase 2 Limitations
-
-- **In-memory duplicate detection:** The HashSet used for ID deduplication is held in RAM. For extremely large datasets (hundreds of millions of documents), a disk-backed approach would be needed. This is documented and acceptable for the MVP.
-- **CSV metadata type preservation:** CSV fields not mapped to `id`/`title`/`text` are stored as JSON strings — numeric and boolean types are not inferred.
-- **Document ordering is file ordering:** The dataset hash commits to the order documents appear in the file. Clients must ensure stable ordering when reproducibility across file re-generations is required.
+1. **Local LanceDB Backend**: The default LanceDB adapter runs in an in-memory vector mode. Enabling native LanceDB disk storage requires the Protocol Buffer compiler (`protoc`) installed on the host system.
+2. **Synthetic Embedding Provider**: The default embedding provider is `dummy`, which deterministically hashes text into dense float vectors for offline reproducible benchmarking. Production models (e.g. ONNX BGE/E5 or remote APIs) require external provider configuration.
+3. **External Database Dependencies**: Benchmarking PostgreSQL, MongoDB, or Qdrant requires their Docker containers (`docker compose up -d`) to be running. If not running, they will be reported as connection failures.
+4. **Single-Node Benchmarking**: The benchmarking harness currently runs on a single node; distributed cluster testing and network jitter simulation are out of scope for the MVP.
+5. **In-Memory ID Deduplication**: Dataset validation stores document IDs in an in-memory HashSet; datasets with hundreds of millions of documents require disk-backed deduplication.
