@@ -158,17 +158,17 @@ trim_whitespace   = true
 [databases.postgres]
 enabled  = true
 host     = "localhost"
-port     = 5432
-username = "postgres"
-password = "postgres"
+port     = 5433
+username = "benchmark_user"
+password = "benchmark_pass"
 database = "benchmark_db"
 
 [databases.mongodb]
 enabled  = true
 host     = "localhost"
 port     = 27017
-username = "mongo"
-password = "mongo"
+username = "benchmark_user"
+password = "benchmark_pass"
 database = "benchmark_db"
 
 [databases.qdrant]

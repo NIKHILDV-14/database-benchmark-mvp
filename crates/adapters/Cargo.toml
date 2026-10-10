@@ -13,6 +13,8 @@ anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tracing = "0.1"
+uuid.workspace = true
+sha2.workspace = true
 
 # Relational / document backends
 postgres = "0.19"

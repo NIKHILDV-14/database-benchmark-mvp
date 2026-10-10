@@ -14,9 +14,61 @@ use qdrant_client::qdrant::{
     PointsSelector, ScrollPoints, SearchPoints, Value as QdrantValue, VectorParams, VectorsConfig,
     WithPayloadSelector,
 };
+use sha2::Digest;
 use std::collections::HashMap;
 use tokio::runtime::Runtime;
 use tracing::{debug, info};
+
+pub const ORIGINAL_ID_KEY: &str = "_original_id";
+
+/// Deterministically maps an arbitrary document ID string to a valid Qdrant `PointId`.
+///
+/// Qdrant point IDs must be valid RFC 4122 UUIDs or unsigned integers (`u64`).
+/// 1. If `doc_id` is already a valid UUID string, it is used directly as a UUID `PointId`.
+/// 2. If `doc_id` is a canonical unsigned integer (no leading zeroes unless "0"), it is used as a numeric `PointId`.
+/// 3. Otherwise, a deterministic, collision-safe UUID v4-formatted string is derived via SHA-256 hash.
+pub fn doc_id_to_qdrant_id(doc_id: &str) -> PointId {
+    if uuid::Uuid::parse_str(doc_id).is_ok() {
+        return PointId::from(doc_id.to_string());
+    }
+
+    if let Ok(num) = doc_id.parse::<u64>() {
+        if num.to_string() == doc_id {
+            return PointId::from(num);
+        }
+    }
+
+    let hash = sha2::Sha256::digest(doc_id.as_bytes());
+    let mut bytes = [0u8; 16];
+    bytes.copy_from_slice(&hash[..16]);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40; // Version 4
+    bytes[8] = (bytes[8] & 0x3f) | 0x80; // Variant RFC 4122
+
+    let uuid_str = format!(
+        "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+        bytes[0], bytes[1], bytes[2], bytes[3],
+        bytes[4], bytes[5],
+        bytes[6], bytes[7],
+        bytes[8], bytes[9],
+        bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]
+    );
+    PointId::from(uuid_str)
+}
+
+fn extract_doc_id(payload: &HashMap<String, QdrantValue>, point_id: Option<&PointId>) -> String {
+    if let Some(val) = payload.get(ORIGINAL_ID_KEY) {
+        if let Some(qdrant_client::qdrant::value::Kind::StringValue(s)) = &val.kind {
+            return s.clone();
+        }
+    }
+    point_id
+        .and_then(|pid| pid.point_id_options.as_ref())
+        .map(|opt| match opt {
+            qdrant_client::qdrant::point_id::PointIdOptions::Uuid(u) => u.clone(),
+            qdrant_client::qdrant::point_id::PointIdOptions::Num(n) => n.to_string(),
+        })
+        .unwrap_or_default()
+}
 
 /// Default dimension used when `load_dataset` is called without prior
 /// `build_vector_index`.  In practice the benchmark harness always calls
@@ -283,10 +335,22 @@ impl VectorAdapter for QdrantAdapter {
 
         let points: Vec<PointStruct> = records
             .iter()
-            .map(|r| PointStruct {
-                id: Some(PointId::from(r.id.clone())),
-                vectors: Some(r.embedding.clone().into()),
-                payload: Self::json_to_qdrant_payload(&r.metadata),
+            .map(|r| {
+                let point_id = doc_id_to_qdrant_id(&r.id);
+                let mut payload = Self::json_to_qdrant_payload(&r.metadata);
+                payload.insert(
+                    ORIGINAL_ID_KEY.to_string(),
+                    QdrantValue {
+                        kind: Some(qdrant_client::qdrant::value::Kind::StringValue(
+                            r.id.clone(),
+                        )),
+                    },
+                );
+                PointStruct {
+                    id: Some(point_id),
+                    vectors: Some(r.embedding.clone().into()),
+                    payload,
+                }
             })
             .collect();
 
@@ -335,17 +399,11 @@ impl VectorAdapter for QdrantAdapter {
             .result
             .into_iter()
             .map(|sp| {
-                let id = sp
-                    .id
-                    .and_then(|pid| pid.point_id_options)
-                    .map(|opt| match opt {
-                        qdrant_client::qdrant::point_id::PointIdOptions::Uuid(u) => u,
-                        qdrant_client::qdrant::point_id::PointIdOptions::Num(n) => n.to_string(),
-                    })
-                    .unwrap_or_default();
+                let id = extract_doc_id(&sp.payload, sp.id.as_ref());
                 let metadata = sp
                     .payload
                     .iter()
+                    .filter(|(k, _)| k.as_str() != ORIGINAL_ID_KEY)
                     .map(|(k, v)| (k.clone(), qdrant_value_to_json(v)))
                     .collect();
                 VectorSearchResult {
@@ -387,17 +445,11 @@ impl VectorAdapter for QdrantAdapter {
             .result
             .into_iter()
             .map(|rp| {
-                let id = rp
-                    .id
-                    .and_then(|pid| pid.point_id_options)
-                    .map(|opt| match opt {
-                        qdrant_client::qdrant::point_id::PointIdOptions::Uuid(u) => u,
-                        qdrant_client::qdrant::point_id::PointIdOptions::Num(n) => n.to_string(),
-                    })
-                    .unwrap_or_default();
+                let id = extract_doc_id(&rp.payload, rp.id.as_ref());
                 let metadata = rp
                     .payload
                     .iter()
+                    .filter(|(k, _)| k.as_str() != ORIGINAL_ID_KEY)
                     .map(|(k, v)| (k.clone(), qdrant_value_to_json(v)))
                     .collect();
                 VectorSearchResult {
@@ -425,7 +477,7 @@ impl VectorAdapter for QdrantAdapter {
         }
         let client = self.get_client()?;
         let coll = self.collection.clone();
-        let point_ids: Vec<PointId> = ids.iter().map(|id| PointId::from(id.clone())).collect();
+        let point_ids: Vec<PointId> = ids.iter().map(|id| doc_id_to_qdrant_id(id)).collect();
 
         self.runtime.block_on(async {
             client
@@ -590,5 +642,72 @@ mod tests {
         };
         assert_eq!(rec.id, "doc-1");
         assert_eq!(rec.embedding.len(), DEFAULT_DIM as usize);
+    }
+
+    #[test]
+    fn test_doc_id_to_qdrant_id_arbitrary_string() {
+        let id1 = "doc_db_1_0";
+        let pid1 = doc_id_to_qdrant_id(id1);
+        let pid2 = doc_id_to_qdrant_id(id1);
+
+        // Deterministic: same string produces identical PointId
+        assert_eq!(pid1, pid2);
+
+        // Must be a valid UUID variant
+        match pid1.point_id_options {
+            Some(qdrant_client::qdrant::point_id::PointIdOptions::Uuid(ref u)) => {
+                assert!(uuid::Uuid::parse_str(u).is_ok());
+            }
+            other => panic!("Expected Uuid PointId option, got {:?}", other),
+        }
+
+        // Collision-safe: different strings produce different PointIds
+        let pid_diff = doc_id_to_qdrant_id("doc_db_2_0");
+        assert_ne!(pid1, pid_diff);
+    }
+
+    #[test]
+    fn test_doc_id_to_qdrant_id_preserves_valid_uuid() {
+        let valid_uuid = "550e8400-e29b-41d4-a716-446655440000";
+        let pid = doc_id_to_qdrant_id(valid_uuid);
+        match pid.point_id_options {
+            Some(qdrant_client::qdrant::point_id::PointIdOptions::Uuid(u)) => {
+                assert_eq!(u, valid_uuid);
+            }
+            other => panic!("Expected Uuid PointId option, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_doc_id_to_qdrant_id_numeric() {
+        let num_str = "12345";
+        let pid = doc_id_to_qdrant_id(num_str);
+        match pid.point_id_options {
+            Some(qdrant_client::qdrant::point_id::PointIdOptions::Num(n)) => {
+                assert_eq!(n, 12345);
+            }
+            other => panic!("Expected Num PointId option, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_extract_doc_id_from_payload() {
+        let mut payload = HashMap::new();
+        payload.insert(
+            ORIGINAL_ID_KEY.to_string(),
+            QdrantValue {
+                kind: Some(qdrant_client::qdrant::value::Kind::StringValue(
+                    "original_doc_123".to_string(),
+                )),
+            },
+        );
+        let point_id = PointId::from(999u64);
+        let extracted = extract_doc_id(&payload, Some(&point_id));
+        assert_eq!(extracted, "original_doc_123");
+
+        // When payload does not contain the key, fall back to PointId
+        let empty_payload = HashMap::new();
+        let fallback = extract_doc_id(&empty_payload, Some(&point_id));
+        assert_eq!(fallback, "999");
     }
 }

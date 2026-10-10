@@ -28,8 +28,8 @@ impl PostgresAdapter {
     fn build_connection_string(&self) -> String {
         let host = self.config.host.as_deref().unwrap_or("localhost");
         let port = self.config.port.unwrap_or(5432);
-        let user = self.config.username.as_deref().unwrap_or("postgres");
-        let pass = self.config.password.as_deref().unwrap_or("postgres");
+        let user = self.config.username.as_deref().unwrap_or("benchmark_user");
+        let pass = self.config.password.as_deref().unwrap_or("benchmark_pass");
         let db = self.config.database.as_deref().unwrap_or("benchmark_db");
         format!("postgresql://{}:{}@{}:{}/{}", user, pass, host, port, db)
     }
@@ -105,7 +105,7 @@ impl DatabaseAdapter for PostgresAdapter {
 
         let stmt = transaction
             .prepare(
-                "INSERT INTO documents (id, title, text, metadata) VALUES ($1, $2, $3, $4::jsonb)",
+                "INSERT INTO documents (id, title, text, metadata) VALUES ($1, $2, $3, $4::text::jsonb)",
             )
             .map_err(|e| {
                 BenchmarkError::DatabaseConnection(format!("Failed to prepare statement: {}", e))
@@ -159,5 +159,48 @@ impl DatabaseAdapter for PostgresAdapter {
             })?;
         info!("Cleaned up PostgreSQL documents table");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_postgres_default_connection_string() {
+        let config = DatabaseConfig {
+            enabled: true,
+            host: None,
+            port: None,
+            username: None,
+            password: None,
+            database: None,
+            pool_size: None,
+            timeout_ms: None,
+        };
+        let adapter = PostgresAdapter::new(config);
+        assert_eq!(
+            adapter.build_connection_string(),
+            "postgresql://benchmark_user:benchmark_pass@localhost:5432/benchmark_db"
+        );
+    }
+
+    #[test]
+    fn test_postgres_explicit_connection_string() {
+        let config = DatabaseConfig {
+            enabled: true,
+            host: Some("127.0.0.1".to_string()),
+            port: Some(5433),
+            username: Some("my_user".to_string()),
+            password: Some("my_pass".to_string()),
+            database: Some("my_db".to_string()),
+            pool_size: None,
+            timeout_ms: None,
+        };
+        let adapter = PostgresAdapter::new(config);
+        assert_eq!(
+            adapter.build_connection_string(),
+            "postgresql://my_user:my_pass@127.0.0.1:5433/my_db"
+        );
     }
 }

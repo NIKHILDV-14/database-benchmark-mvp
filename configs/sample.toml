@@ -10,15 +10,30 @@ trim_whitespace = true
 
 [databases.postgres]
 enabled = true
+host = "localhost"
+port = 5433
+username = "benchmark_user"
+password = "benchmark_pass"
+database = "benchmark_db"
 
 [databases.mongodb]
 enabled = true
+host = "localhost"
+port = 27017
+username = "benchmark_user"
+password = "benchmark_pass"
+database = "benchmark_db"
 
 [databases.qdrant]
 enabled = true
+host = "localhost"
+port = 6334
+database = "benchmark_vectors"
 
 [databases.lancedb]
 enabled = true
+host = "/tmp/lancedb_benchmark"
+database = "benchmark_vectors"
 
 [embedding]
 provider = "dummy"

@@ -33,11 +33,12 @@ impl MongoDbAdapter {
     fn build_connection_string(&self) -> String {
         let host = self.config.host.as_deref().unwrap_or("localhost");
         let port = self.config.port.unwrap_or(27017);
-        let user = self.config.username.as_deref().unwrap_or("mongo");
-        let pass = self.config.password.as_deref().unwrap_or("mongo");
+        let user = self.config.username.as_deref().unwrap_or("benchmark_user");
+        let pass = self.config.password.as_deref().unwrap_or("benchmark_pass");
+        let db = self.config.database.as_deref().unwrap_or("benchmark_db");
         format!(
-            "mongodb://{}:{}@{}:{}/?authSource=admin",
-            user, pass, host, port
+            "mongodb://{}:{}@{}:{}/{}?authSource=admin",
+            user, pass, host, port, db
         )
     }
 }
@@ -154,5 +155,48 @@ impl DatabaseAdapter for MongoDbAdapter {
         })?;
         info!("Cleaned up MongoDB collection");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_mongodb_default_connection_string() {
+        let config = DatabaseConfig {
+            enabled: true,
+            host: None,
+            port: None,
+            username: None,
+            password: None,
+            database: None,
+            pool_size: None,
+            timeout_ms: None,
+        };
+        let adapter = MongoDbAdapter::new(config);
+        assert_eq!(
+            adapter.build_connection_string(),
+            "mongodb://benchmark_user:benchmark_pass@localhost:27017/benchmark_db?authSource=admin"
+        );
+    }
+
+    #[test]
+    fn test_mongodb_explicit_connection_string() {
+        let config = DatabaseConfig {
+            enabled: true,
+            host: Some("10.0.0.1".to_string()),
+            port: Some(27018),
+            username: Some("custom_user".to_string()),
+            password: Some("custom_pass".to_string()),
+            database: Some("custom_db".to_string()),
+            pool_size: None,
+            timeout_ms: None,
+        };
+        let adapter = MongoDbAdapter::new(config);
+        assert_eq!(
+            adapter.build_connection_string(),
+            "mongodb://custom_user:custom_pass@10.0.0.1:27018/custom_db?authSource=admin"
+        );
     }
 }
