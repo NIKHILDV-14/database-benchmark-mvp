@@ -1,16 +1,20 @@
 pub mod accuracy;
+pub mod aggregator;
 pub mod config;
 pub mod ground_truth;
 pub mod metrics;
 pub mod models;
+pub mod report_builder;
 pub mod statistics;
 pub mod traits;
 pub mod validator;
 
 pub use accuracy::AccuracyEvaluator;
+pub use aggregator::{aggregate, AggregatedStat, MetricsAggregator};
 pub use config::{DefaultThresholds, EvaluationConfig};
 pub use ground_truth::{AccuracyScore, GroundTruth};
 pub use metrics::MetricCalculator;
 pub use models::{DatabaseEvaluation, EvaluationReport, MetricScore, ValidationStatus};
+pub use report_builder::{inject_accuracy, EvaluationReportBuilder};
 pub use traits::{MetricEvaluator, ReportBuilder};
 pub use validator::{BenchmarkValidator, ValidationContext};
