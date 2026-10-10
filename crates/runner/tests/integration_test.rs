@@ -342,3 +342,35 @@ fn test_pipeline_result_json_serialization() {
 
     let _ = fs::remove_file(jsonl_path);
 }
+
+// ── 11. CLI Execution: Clean JSON Stdout Without Log Pollution ─────────────────
+
+#[test]
+fn test_cli_json_output_directly_parseable() {
+    let config_path = "configs/lancedb_only.toml";
+    if std::path::Path::new(config_path).exists() {
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_runner"))
+            .arg(config_path)
+            .arg("--json")
+            .output()
+            .expect("Failed to execute runner CLI binary");
+
+        assert!(
+            output.status.success(),
+            "Runner CLI should exit successfully"
+        );
+
+        // Standard output MUST be valid JSON directly with zero substring manipulation
+        let stdout_str = String::from_utf8(output.stdout).expect("Stdout should be UTF-8");
+        let parsed: serde_json::Value = serde_json::from_str(&stdout_str)
+            .expect("Stdout should be parsed directly by serde_json without removing log lines");
+
+        assert_eq!(parsed["recommendation_report"]["best_candidate"], "lancedb");
+        assert!(parsed["environment"]["cpu_cores"].is_number());
+        assert_eq!(parsed["dataset"]["format"], "jsonl");
+
+        // Stderr should contain the tracing log lines
+        let stderr_str = String::from_utf8(output.stderr).expect("Stderr should be UTF-8");
+        assert!(stderr_str.contains("Running database benchmark pipeline"));
+    }
+}

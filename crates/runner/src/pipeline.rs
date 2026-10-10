@@ -152,8 +152,14 @@ impl BenchmarkPipeline {
         let evaluation_report =
             report_builder.build_report(&benchmark_results, &options.evaluation_config);
 
+        let actual_evaluated_count = evaluation_report
+            .databases
+            .keys()
+            .filter(|k| !k.starts_with("__"))
+            .count();
+
         info!(
-            evaluated_databases = evaluation_report.databases.len(),
+            evaluated_databases = actual_evaluated_count,
             "Evaluation report generated"
         );
 
