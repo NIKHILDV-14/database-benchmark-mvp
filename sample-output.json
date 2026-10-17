@@ -1,0 +1,946 @@
+{
+  "environment": {
+    "experiment_id": "870ad92a-bba3-4557-97d5-13325a435551",
+    "timestamp": "2026-10-11T02:56:35.748361600Z",
+    "os": "Windows 11 Home Single Language",
+    "cpu_cores": 8,
+    "total_ram_mb": 7876
+  },
+  "dataset": {
+    "path": "./datasets/sample.jsonl",
+    "format": "jsonl",
+    "document_count": 12,
+    "original_size_bytes": 6979,
+    "dataset_hash": "00cb6a8862c32afff2806a737966412f13e74684ee384601da95ecc924c734a2",
+    "empty_text_policy": "reject",
+    "trim_whitespace": true
+  },
+  "benchmark_results": [
+    {
+      "database": "postgres",
+      "insert": {
+        "duration": {
+          "secs": 0,
+          "nanos": 57152400
+        },
+        "status": "Success",
+        "result_count": 12
+      },
+      "queries": [
+        {
+          "duration": {
+            "secs": 0,
+            "nanos": 14561400
+          },
+          "status": "Success",
+          "result_count": 12
+        }
+      ],
+      "delete": {
+        "duration": {
+          "secs": 0,
+          "nanos": 15010500
+        },
+        "status": "Success",
+        "result_count": 0
+      }
+    },
+    {
+      "database": "mongodb",
+      "insert": {
+        "duration": {
+          "secs": 0,
+          "nanos": 107412500
+        },
+        "status": "Success",
+        "result_count": 12
+      },
+      "queries": [
+        {
+          "duration": {
+            "secs": 0,
+            "nanos": 66902900
+          },
+          "status": "Success",
+          "result_count": 12
+        }
+      ],
+      "delete": {
+        "duration": {
+          "secs": 0,
+          "nanos": 14549200
+        },
+        "status": "Success",
+        "result_count": 0
+      }
+    },
+    {
+      "database": "qdrant",
+      "insert": {
+        "duration": {
+          "secs": 0,
+          "nanos": 365858600
+        },
+        "status": "Success",
+        "result_count": 12
+      },
+      "queries": [
+        {
+          "duration": {
+            "secs": 0,
+            "nanos": 300
+          },
+          "status": "Success",
+          "result_count": 0
+        }
+      ],
+      "delete": {
+        "duration": {
+          "secs": 0,
+          "nanos": 9177700
+        },
+        "status": "Success",
+        "result_count": 0
+      }
+    },
+    {
+      "database": "lancedb",
+      "insert": {
+        "duration": {
+          "secs": 0,
+          "nanos": 91300
+        },
+        "status": "Success",
+        "result_count": 12
+      },
+      "queries": [
+        {
+          "duration": {
+            "secs": 0,
+            "nanos": 400
+          },
+          "status": "Success",
+          "result_count": 0
+        }
+      ],
+      "delete": {
+        "duration": {
+          "secs": 0,
+          "nanos": 37100
+        },
+        "status": "Success",
+        "result_count": 0
+      }
+    }
+  ],
+  "evaluation_report": {
+    "workload_name": "text-mvp-test",
+    "databases": {
+      "__aggregate__failed_operations": {
+        "database_name": "__aggregate__failed_operations",
+        "validation_status": "Skipped",
+        "metrics": {
+          "min": {
+            "name": "min",
+            "value": 0.0,
+            "unit": ""
+          },
+          "variance": {
+            "name": "variance",
+            "value": 0.0,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 0.0,
+            "unit": ""
+          },
+          "mean": {
+            "name": "mean",
+            "value": 0.0,
+            "unit": ""
+          },
+          "max": {
+            "name": "max",
+            "value": 0.0,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          }
+        }
+      },
+      "mongodb": {
+        "database_name": "mongodb",
+        "validation_status": "Valid",
+        "metrics": {
+          "success_rate": {
+            "name": "success_rate",
+            "value": 100.0,
+            "unit": "%"
+          },
+          "delete_latency": {
+            "name": "delete_latency",
+            "value": 14.5492,
+            "unit": "ms"
+          },
+          "insert_latency": {
+            "name": "insert_latency",
+            "value": 107.4125,
+            "unit": "ms"
+          },
+          "min_query_latency": {
+            "name": "min_query_latency",
+            "value": 66.9029,
+            "unit": "ms"
+          },
+          "average_latency": {
+            "name": "average_latency",
+            "value": 62.954865999999996,
+            "unit": "ms"
+          },
+          "min_latency": {
+            "name": "min_latency",
+            "value": 14.5492,
+            "unit": "ms"
+          },
+          "max_latency": {
+            "name": "max_latency",
+            "value": 107.4125,
+            "unit": "ms"
+          },
+          "throughput": {
+            "name": "throughput",
+            "value": 15.884395487560928,
+            "unit": "ops/sec"
+          },
+          "total_operations": {
+            "name": "total_operations",
+            "value": 3.0,
+            "unit": "count"
+          },
+          "max_query_latency": {
+            "name": "max_query_latency",
+            "value": 66.9029,
+            "unit": "ms"
+          },
+          "successful_operations": {
+            "name": "successful_operations",
+            "value": 3.0,
+            "unit": "count"
+          },
+          "average_query_latency": {
+            "name": "average_query_latency",
+            "value": 66.9029,
+            "unit": "ms"
+          },
+          "failed_operations": {
+            "name": "failed_operations",
+            "value": 0.0,
+            "unit": "count"
+          }
+        }
+      },
+      "__aggregate__delete_latency": {
+        "database_name": "__aggregate__delete_latency",
+        "validation_status": "Skipped",
+        "metrics": {
+          "variance": {
+            "name": "variance",
+            "value": 36.340105506875005,
+            "unit": ""
+          },
+          "mean": {
+            "name": "mean",
+            "value": 9.693625,
+            "unit": ""
+          },
+          "max": {
+            "name": "max",
+            "value": 15.0105,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 11.86345,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 0.0371,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          }
+        }
+      },
+      "__aggregate__successful_operations": {
+        "database_name": "__aggregate__successful_operations",
+        "validation_status": "Skipped",
+        "metrics": {
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "max": {
+            "name": "max",
+            "value": 3.0,
+            "unit": ""
+          },
+          "mean": {
+            "name": "mean",
+            "value": 3.0,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 3.0,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 3.0,
+            "unit": ""
+          },
+          "variance": {
+            "name": "variance",
+            "value": 0.0,
+            "unit": ""
+          }
+        }
+      },
+      "__aggregate__success_rate": {
+        "database_name": "__aggregate__success_rate",
+        "validation_status": "Skipped",
+        "metrics": {
+          "max": {
+            "name": "max",
+            "value": 100.0,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "min": {
+            "name": "min",
+            "value": 100.0,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 100.0,
+            "unit": ""
+          },
+          "mean": {
+            "name": "mean",
+            "value": 100.0,
+            "unit": ""
+          },
+          "variance": {
+            "name": "variance",
+            "value": 0.0,
+            "unit": ""
+          }
+        }
+      },
+      "qdrant": {
+        "database_name": "qdrant",
+        "validation_status": "Valid",
+        "metrics": {
+          "min_query_latency": {
+            "name": "min_query_latency",
+            "value": 0.0003,
+            "unit": "ms"
+          },
+          "insert_latency": {
+            "name": "insert_latency",
+            "value": 365.85859999999997,
+            "unit": "ms"
+          },
+          "delete_latency": {
+            "name": "delete_latency",
+            "value": 9.1777,
+            "unit": "ms"
+          },
+          "max_query_latency": {
+            "name": "max_query_latency",
+            "value": 0.0003,
+            "unit": "ms"
+          },
+          "average_query_latency": {
+            "name": "average_query_latency",
+            "value": 0.0003,
+            "unit": "ms"
+          },
+          "throughput": {
+            "name": "throughput",
+            "value": 7.999219276198643,
+            "unit": "ops/sec"
+          },
+          "total_operations": {
+            "name": "total_operations",
+            "value": 3.0,
+            "unit": "count"
+          },
+          "success_rate": {
+            "name": "success_rate",
+            "value": 100.0,
+            "unit": "%"
+          },
+          "max_latency": {
+            "name": "max_latency",
+            "value": 365.85859999999997,
+            "unit": "ms"
+          },
+          "successful_operations": {
+            "name": "successful_operations",
+            "value": 3.0,
+            "unit": "count"
+          },
+          "failed_operations": {
+            "name": "failed_operations",
+            "value": 0.0,
+            "unit": "count"
+          },
+          "average_latency": {
+            "name": "average_latency",
+            "value": 125.01219999999999,
+            "unit": "ms"
+          },
+          "min_latency": {
+            "name": "min_latency",
+            "value": 0.0003,
+            "unit": "ms"
+          }
+        }
+      },
+      "lancedb": {
+        "database_name": "lancedb",
+        "validation_status": "Valid",
+        "metrics": {
+          "delete_latency": {
+            "name": "delete_latency",
+            "value": 0.0371,
+            "unit": "ms"
+          },
+          "average_query_latency": {
+            "name": "average_query_latency",
+            "value": 0.00039999999999999996,
+            "unit": "ms"
+          },
+          "min_query_latency": {
+            "name": "min_query_latency",
+            "value": 0.00039999999999999996,
+            "unit": "ms"
+          },
+          "average_latency": {
+            "name": "average_latency",
+            "value": 0.042933,
+            "unit": "ms"
+          },
+          "min_latency": {
+            "name": "min_latency",
+            "value": 0.00039999999999999996,
+            "unit": "ms"
+          },
+          "max_latency": {
+            "name": "max_latency",
+            "value": 0.09129999999999999,
+            "unit": "ms"
+          },
+          "throughput": {
+            "name": "throughput",
+            "value": 23291.92546583851,
+            "unit": "ops/sec"
+          },
+          "success_rate": {
+            "name": "success_rate",
+            "value": 100.0,
+            "unit": "%"
+          },
+          "failed_operations": {
+            "name": "failed_operations",
+            "value": 0.0,
+            "unit": "count"
+          },
+          "successful_operations": {
+            "name": "successful_operations",
+            "value": 3.0,
+            "unit": "count"
+          },
+          "total_operations": {
+            "name": "total_operations",
+            "value": 3.0,
+            "unit": "count"
+          },
+          "insert_latency": {
+            "name": "insert_latency",
+            "value": 0.09129999999999999,
+            "unit": "ms"
+          },
+          "max_query_latency": {
+            "name": "max_query_latency",
+            "value": 0.00039999999999999996,
+            "unit": "ms"
+          }
+        }
+      },
+      "postgres": {
+        "database_name": "postgres",
+        "validation_status": "Valid",
+        "metrics": {
+          "average_query_latency": {
+            "name": "average_query_latency",
+            "value": 14.5614,
+            "unit": "ms"
+          },
+          "failed_operations": {
+            "name": "failed_operations",
+            "value": 0.0,
+            "unit": "count"
+          },
+          "min_query_latency": {
+            "name": "min_query_latency",
+            "value": 14.5614,
+            "unit": "ms"
+          },
+          "total_operations": {
+            "name": "total_operations",
+            "value": 3.0,
+            "unit": "count"
+          },
+          "average_latency": {
+            "name": "average_latency",
+            "value": 28.908099999999997,
+            "unit": "ms"
+          },
+          "max_latency": {
+            "name": "max_latency",
+            "value": 57.1524,
+            "unit": "ms"
+          },
+          "delete_latency": {
+            "name": "delete_latency",
+            "value": 15.0105,
+            "unit": "ms"
+          },
+          "insert_latency": {
+            "name": "insert_latency",
+            "value": 57.1524,
+            "unit": "ms"
+          },
+          "max_query_latency": {
+            "name": "max_query_latency",
+            "value": 14.5614,
+            "unit": "ms"
+          },
+          "min_latency": {
+            "name": "min_latency",
+            "value": 14.5614,
+            "unit": "ms"
+          },
+          "throughput": {
+            "name": "throughput",
+            "value": 34.59238068223094,
+            "unit": "ops/sec"
+          },
+          "success_rate": {
+            "name": "success_rate",
+            "value": 100.0,
+            "unit": "%"
+          },
+          "successful_operations": {
+            "name": "successful_operations",
+            "value": 3.0,
+            "unit": "count"
+          }
+        }
+      },
+      "__aggregate__insert_latency": {
+        "database_name": "__aggregate__insert_latency",
+        "validation_status": "Skipped",
+        "metrics": {
+          "mean": {
+            "name": "mean",
+            "value": 132.6287,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "max": {
+            "name": "max",
+            "value": 365.85859999999997,
+            "unit": ""
+          },
+          "variance": {
+            "name": "variance",
+            "value": 19573.719314224996,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 0.09129999999999999,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 82.28245,
+            "unit": ""
+          }
+        }
+      },
+      "__aggregate__throughput": {
+        "database_name": "__aggregate__throughput",
+        "validation_status": "Skipped",
+        "metrics": {
+          "mean": {
+            "name": "mean",
+            "value": 5837.6003653211255,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 25.238388084895934,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 7.999219276198643,
+            "unit": ""
+          },
+          "variance": {
+            "name": "variance",
+            "value": 101551248.18492937,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "max": {
+            "name": "max",
+            "value": 23291.92546583851,
+            "unit": ""
+          }
+        }
+      },
+      "__aggregate__max_latency": {
+        "database_name": "__aggregate__max_latency",
+        "validation_status": "Skipped",
+        "metrics": {
+          "variance": {
+            "name": "variance",
+            "value": 19573.719314224996,
+            "unit": ""
+          },
+          "mean": {
+            "name": "mean",
+            "value": 132.6287,
+            "unit": ""
+          },
+          "max": {
+            "name": "max",
+            "value": 365.85859999999997,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 0.09129999999999999,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 82.28245,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          }
+        }
+      },
+      "__aggregate__min_latency": {
+        "database_name": "__aggregate__min_latency",
+        "validation_status": "Skipped",
+        "metrics": {
+          "variance": {
+            "name": "variance",
+            "value": 52.961660981875,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "mean": {
+            "name": "mean",
+            "value": 7.277825,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 7.274800000000001,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 0.0003,
+            "unit": ""
+          },
+          "max": {
+            "name": "max",
+            "value": 14.5614,
+            "unit": ""
+          }
+        }
+      },
+      "__aggregate__max_query_latency": {
+        "database_name": "__aggregate__max_query_latency",
+        "validation_status": "Skipped",
+        "metrics": {
+          "variance": {
+            "name": "variance",
+            "value": 757.2239605925,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 0.0003,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "median": {
+            "name": "median",
+            "value": 7.280900000000001,
+            "unit": ""
+          },
+          "max": {
+            "name": "max",
+            "value": 66.9029,
+            "unit": ""
+          },
+          "mean": {
+            "name": "mean",
+            "value": 20.36625,
+            "unit": ""
+          }
+        }
+      },
+      "__aggregate__average_query_latency": {
+        "database_name": "__aggregate__average_query_latency",
+        "validation_status": "Skipped",
+        "metrics": {
+          "variance": {
+            "name": "variance",
+            "value": 757.2239605925,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "mean": {
+            "name": "mean",
+            "value": 20.36625,
+            "unit": ""
+          },
+          "max": {
+            "name": "max",
+            "value": 66.9029,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 0.0003,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 7.280900000000001,
+            "unit": ""
+          }
+        }
+      },
+      "__aggregate__average_latency": {
+        "database_name": "__aggregate__average_latency",
+        "validation_status": "Skipped",
+        "metrics": {
+          "max": {
+            "name": "max",
+            "value": 125.01219999999999,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "min": {
+            "name": "min",
+            "value": 0.042933,
+            "unit": ""
+          },
+          "mean": {
+            "name": "mean",
+            "value": 54.229524749999996,
+            "unit": ""
+          },
+          "variance": {
+            "name": "variance",
+            "value": 2165.9199930817485,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 45.931483,
+            "unit": ""
+          }
+        }
+      },
+      "__aggregate__min_query_latency": {
+        "database_name": "__aggregate__min_query_latency",
+        "validation_status": "Skipped",
+        "metrics": {
+          "max": {
+            "name": "max",
+            "value": 66.9029,
+            "unit": ""
+          },
+          "variance": {
+            "name": "variance",
+            "value": 757.2239605925,
+            "unit": ""
+          },
+          "mean": {
+            "name": "mean",
+            "value": 20.36625,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 7.280900000000001,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          },
+          "min": {
+            "name": "min",
+            "value": 0.0003,
+            "unit": ""
+          }
+        }
+      },
+      "__aggregate__total_operations": {
+        "database_name": "__aggregate__total_operations",
+        "validation_status": "Skipped",
+        "metrics": {
+          "mean": {
+            "name": "mean",
+            "value": 3.0,
+            "unit": ""
+          },
+          "variance": {
+            "name": "variance",
+            "value": 0.0,
+            "unit": ""
+          },
+          "max": {
+            "name": "max",
+            "value": 3.0,
+            "unit": ""
+          },
+          "median": {
+            "name": "median",
+            "value": 3.0,
+            "unit": ""
+          },
+          "min": {
+            "name": "min",
+            "value": 3.0,
+            "unit": ""
+          },
+          "count": {
+            "name": "count",
+            "value": 4.0,
+            "unit": "count"
+          }
+        }
+      }
+    },
+    "timestamp": ""
+  },
+  "recommendation_report": {
+    "workload_name": "text-mvp-test",
+    "ranked_candidates": [
+      {
+        "database": "lancedb",
+        "score": 1.0,
+        "rank": 1,
+        "contributing_metrics": {
+          "throughput": 1.0,
+          "latency": 1.0
+        },
+        "explanation": "Ranked #1 with composite score 1.00 (contributing metrics: latency: 1.00, throughput: 1.00).",
+        "status": "Eligible"
+      },
+      {
+        "database": "qdrant",
+        "score": 0.5,
+        "rank": 2,
+        "contributing_metrics": {
+          "throughput": 0.0,
+          "latency": 1.0
+        },
+        "explanation": "Ranked #2 with composite score 0.50 (contributing metrics: latency: 1.00, throughput: 0.00).",
+        "status": "Eligible"
+      },
+      {
+        "database": "postgres",
+        "score": 0.3917,
+        "rank": 3,
+        "contributing_metrics": {
+          "latency": 0.782,
+          "throughput": 0.001
+        },
+        "explanation": "Ranked #3 with composite score 0.39 (contributing metrics: latency: 0.78, throughput: 0.00).",
+        "status": "Eligible"
+      },
+      {
+        "database": "mongodb",
+        "score": 0.0002,
+        "rank": 4,
+        "contributing_metrics": {
+          "latency": 0.0,
+          "throughput": 0.0
+        },
+        "explanation": "Ranked #4 with composite score 0.00 (contributing metrics: latency: 0.00, throughput: 0.00).",
+        "status": "Eligible"
+      }
+    ],
+    "best_candidate": "lancedb",
+    "excluded_candidates": [],
+    "summary": "Recommended database 'lancedb' with composite score 1.00 for workload 'text-mvp-test'. 4 eligible candidates ranked, 0 excluded."
+  }
+}

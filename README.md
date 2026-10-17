@@ -44,6 +44,20 @@ To benchmark external databases alongside LanceDB:
 
 > **Note on Service Availability:** If an external database container is not running, the tool will gracefully log the connection failure, mark that evaluation as invalid, and exclude it from the final recommendation with an explanatory diagnostic message, allowing healthy databases to still be benchmarked and ranked.
 
+### 3. Visualizing Results with the Dashboard
+
+A zero-dependency, single-page visual dashboard (`dashboard.html`) is provided to inspect and compare benchmark runs, validation statuses, performance charts, and database recommendations.
+
+1. Export the benchmark output as JSON:
+   ```bash
+   cargo run -- configs/sample.toml --json > results.json
+   ```
+2. Open `dashboard.html` in any web browser:
+   - Double-click `dashboard.html` directly from your file manager, or open via `file://`.
+3. View the results:
+   - Click **Upload** to select your `results.json` file, or paste the JSON content into the input textarea and click **Render**.
+   - Click **Load Sample** to instantly inspect the included real run data (`sample-output.json`).
+
 ---
 
 ## End-to-End Pipeline (Phase 8 Architecture)

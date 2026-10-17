@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DATABASE BENCHMARKING &amp; RECOMMENDATION // TACTICAL HUD</title>
+  <meta name="description" content="Tactical monochrome telemetry dashboard for Database Benchmarking & Recommendation Tool results.">
+  <style>
+    /* ==========================================================================
+       MONOCHROME TACTICAL HUD DESIGN SYSTEM
+       Strictly Black, White, and Greys (No colors: no blue, green, red, amber)
+       ========================================================================== */
+    :root {
+      --bg-page: #000000;
+      --bg-panel: #0d0d0d;
+      --bg-card: #121212;
+      --bg-input: #050505;
+      --border-panel: 1px solid #3a3a3a;
+      --border-light: 1px solid #222222;
+      --border-dim: 1px solid #1a1a1a;
+      
+      --text-primary: #f2f2f2;
+      --text-secondary: #8a8a8a;
+      --text-dim: #555555;
+      --text-white: #ffffff;
+      
+      --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Disable animations if user prefers reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ==========================================================================
+       TACTICAL PANELS & CORNER BRACKETS
+       ========================================================================== */
+    .tactical-box {
+      background-color: var(--bg-panel);
+      border: var(--border-panel);
+      position: relative;
+      background-image: 
+        linear-gradient(to right, #ffffff 8px, transparent 8px),
+        linear-gradient(to bottom, #ffffff 8px, transparent 8px),
+        linear-gradient(to left, #ffffff 8px, transparent 8px),
+        linear-gradient(to bottom, #ffffff 8px, transparent 8px),
+        linear-gradient(to right, #ffffff 8px, transparent 8px),
+        linear-gradient(to top, #ffffff 8px, transparent 8px),
+        linear-gradient(to left, #ffffff 8px, transparent 8px),
+        linear-gradient(to top, #ffffff 8px, transparent 8px);
+      background-position: 
+        top left, top left,
+        top right, top right,
+        bottom left, bottom left,
+        bottom right, bottom right;
+      background-size: 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px;
+      background-repeat: no-repeat;
+      padding: 1.25rem;
+    }
+
+    .panel-tag-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid #222222;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .sys-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .sys-subtag {
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ==========================================================================
+       TOP STATUS BAR & TELEMETRY
+       ========================================================================== */
+    .top-status-header {
+      background: #000000;
+      border-bottom: 1px solid #3a3a3a;
+      padding: 0.85rem 1.75rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 1760px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .header-primary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header-title-block h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: var(--text-white);
+      text-transform: uppercase;
+      margin-bottom: 0.15rem;
+    }
+
+    .header-title-block p {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status-badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.8rem;
+      border: 1px solid #ffffff;
+      background: #000000;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--text-white);
+      text-transform: uppercase;
+    }
+
+    .status-marker-square {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #ffffff;
+    }
+
+    .header-telemetry-row {
+      display: flex;
+      gap: 1.75rem;
+      flex-wrap: wrap;
+      padding-top: 0.45rem;
+      border-top: 1px solid #1a1a1a;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .telemetry-cell {
+      display: flex;
+      gap: 0.45rem;
+    }
+
+    .telemetry-cell .t-lbl {
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+
+    .telemetry-cell .t-val {
+      color: var(--text-white);
+      font-family: var(--font-mono);
+    }
+
+    /* Scanning animation line */
+    .scan-track {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .scan-beam {
+      position: absolute;
+      top: 0;
+      left: -30%;
+      width: 30%;
+      height: 100%;
+      background: #ffffff;
+      box-shadow: 0 0 10px #ffffff;
+      opacity: 0;
+    }
+
+    .scan-beam.scanning {
+      animation: scanSweep 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    @keyframes scanSweep {
+      0% { left: -30%; opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+
+    /* ==========================================================================
+       MAIN LAYOUT: TWO PANELS (390px Left / 1fr Right)
+       ========================================================================== */
+    .hud-main {
+      max-width: 1760px;
+      margin: 1.25rem auto 3rem auto;
+      padding: 0 1.25rem;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1160px) {
+      .hud-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ==========================================================================
+       LEFT PANEL: INPUT
+       ========================================================================== */
+    .hud-panel-left {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      position: sticky;
+      top: 6rem;
+    }
+
+    .terminal-command-box {
+      background: var(--bg-input);
+      border: 1px solid #2a2a2a;
+      padding: 0.85rem 1rem;
+    }
+
+    .terminal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .terminal-prompt-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .btn-copy {
+      background: transparent;
+      border: 1px solid #555555;
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.55rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.15s;
+    }
+
+    .btn-copy:hover {
+      border-color: #ffffff;
+      color: #ffffff;
+    }
+
+    .terminal-code {
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      color: var(--text-white);
+      word-break: break-all;
+      display: block;
+      line-height: 1.4;
+    }
+
+    .terminal-hint {
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      margin-top: 0.4rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* Tactical Action Buttons */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .btn-tactical {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 1px solid #ffffff;
+      background: transparent;
+      color: #ffffff;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-tactical-primary {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .btn-tactical-primary:hover {
+      background: #d4d4d4;
+      border-color: #d4d4d4;
+    }
+
+    .btn-tactical-secondary:hover {
+      background: #1a1a1a;
+      border-color: #ffffff;
+    }
+
+    .btn-tactical-outline {
+      border-color: #444444;
+      color: var(--text-secondary);
+    }
+
+    .btn-tactical-outline:hover {
+      border-color: #ffffff;
+      color: #ffffff;
+    }
+
+    .file-upload-wrap {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .file-upload-wrap input[type="file"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* Error alert box */
+    .tactical-error-box {
+      border: 1px solid #ffffff;
+      background: #000000;
+      padding: 0.85rem 1rem;
+      display: none;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .tactical-error-box.visible {
+      display: flex;
+    }
+
+    .error-header-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #ffffff;
+    }
+
+    .error-body-text {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Textarea */
+    .textarea-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.74rem;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .tactical-textarea {
+      width: 100%;
+      height: 380px;
+      background: var(--bg-input);
+      border: 1px solid #3a3a3a;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      padding: 0.75rem;
+      resize: vertical;
+      outline: none;
+    }
+
+    .tactical-textarea:focus {
+      border-color: #ffffff;
+    }
+
+    /* ==========================================================================
+       RIGHT PANEL: VISUALIZATION TELEMETRY
+       ========================================================================== */
+    .hud-panel-right {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Honesty Notices */
+    .notices-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .hazard-banner {
+      border: 1px solid #ffffff;
+      background: var(--bg-panel);
+      position: relative;
+      padding: 0.85rem 1.25rem 0.85rem 2.25rem;
+      overflow: hidden;
+    }
+
+    .hazard-banner::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 16px;
+      background: repeating-linear-gradient(
+        -45deg,
+        #ffffff,
+        #ffffff 6px,
+        #000000 6px,
+        #000000 12px
+      );
+      border-right: 1px solid #ffffff;
+    }
+
+    .hazard-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: #ffffff;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+
+    .hazard-body {
+      font-size: 0.84rem;
+      color: var(--text-white);
+      letter-spacing: 0.04em;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+
+    .info-banner {
+      border: 1px solid #3a3a3a;
+      background: var(--bg-panel);
+      padding: 0.75rem 1.25rem;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+
+    .info-banner strong {
+      color: var(--text-white);
+    }
+
+    /* ==========================================================================
+       WINNER HERO CARD (SYS // 02 RECOMMENDATION)
+       2px White Outline, Corner Brackets, Big Bold Numbers, No Emojis
+       ========================================================================== */
+    .winner-hero-box {
+      border: 2px solid #ffffff;
+      background: var(--bg-panel);
+      padding: 1.6rem;
+      position: relative;
+      background-image: 
+        linear-gradient(to right, #ffffff 12px, transparent 12px),
+        linear-gradient(to bottom, #ffffff 12px, transparent 12px),
+        linear-gradient(to left, #ffffff 12px, transparent 12px),
+        linear-gradient(to bottom, #ffffff 12px, transparent 12px),
+        linear-gradient(to right, #ffffff 12px, transparent 12px),
+        linear-gradient(to top, #ffffff 12px, transparent 12px),
+        linear-gradient(to left, #ffffff 12px, transparent 12px),
+        linear-gradient(to top, #ffffff 12px, transparent 12px);
+      background-position: 
+        top left, top left,
+        top right, top right,
+        bottom left, bottom left,
+        bottom right, bottom right;
+      background-size: 12px 3px, 3px 12px, 12px 3px, 3px 12px, 12px 3px, 3px 12px, 12px 3px, 3px 12px;
+      background-repeat: no-repeat;
+    }
+
+    .winner-status-tag {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      background: #ffffff;
+      color: #000000;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.85rem;
+    }
+
+    .winner-split-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    @media (max-width: 760px) {
+      .winner-split-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .winner-id-heading {
+      font-size: 3.25rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: var(--text-white);
+      text-transform: uppercase;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .winner-rationale {
+      font-size: 0.92rem;
+      color: var(--text-primary);
+      margin-top: 0.65rem;
+      letter-spacing: 0.04em;
+      line-height: 1.45;
+      text-transform: uppercase;
+    }
+
+    .winner-score-pod {
+      border: 1px solid #ffffff;
+      background: #000000;
+      padding: 1.1rem 1.6rem;
+      text-align: center;
+      min-width: 170px;
+    }
+
+    .score-pod-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .score-pod-number {
+      font-size: 3.6rem;
+      font-weight: 900;
+      color: var(--text-white);
+      line-height: 1;
+      margin-top: 0.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-pod-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+
+    .metric-weights-deck {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid #222222;
+    }
+
+    .weight-box {
+      border: 1px solid #3a3a3a;
+      background: #000000;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .weight-box strong {
+      color: var(--text-white);
+    }
+
+    /* ==========================================================================
+       RING GAUGES ROW (SYS // 03 COMPOSITE RATINGS)
+       One Ring / Donut Gauge per Database
+       ========================================================================== */
+    .gauges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 1rem;
+    }
+
+    .gauge-cell {
+      border: 1px solid #2a2a2a;
+      background: #050505;
+      padding: 1rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .gauge-cell.gauge-winner {
+      border-color: #ffffff;
+      background: #0d0d0d;
+    }
+
+    .gauge-cell.gauge-excluded {
+      border-style: dashed;
+      border-color: #333333;
+      opacity: 0.65;
+    }
+
+    .gauge-top-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-white);
+      margin-bottom: 0.5rem;
+    }
+
+    .gauge-svg-wrap {
+      width: 110px;
+      height: 110px;
+      position: relative;
+    }
+
+    .gauge-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .gauge-circle-track {
+      stroke: #222222;
+      stroke-width: 8;
+      fill: none;
+    }
+
+    .gauge-circle-bar {
+      fill: none;
+      stroke-width: 8;
+      stroke-linecap: square;
+      stroke-dasharray: 238.76;
+      stroke-dashoffset: 238.76;
+      transition: stroke-dashoffset 0.5s ease-out;
+    }
+
+    .gauge-circle-bar.bar-winner {
+      stroke: #ffffff;
+    }
+
+    .gauge-circle-bar.bar-eligible {
+      stroke: #8a8a8a;
+    }
+
+    .gauge-circle-bar.bar-excluded {
+      stroke: #444444;
+      stroke-dasharray: 4, 4;
+    }
+
+    .gauge-center-val {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-white);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .gauge-rank-tag {
+      margin-top: 0.65rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid #333333;
+      color: var(--text-secondary);
+    }
+
+    .gauge-winner .gauge-rank-tag {
+      border-color: #ffffff;
+      background: #ffffff;
+      color: #000000;
+    }
+
+    /* ==========================================================================
+       COLUMN CHARTS (SYS // 04 PERFORMANCE TELEMETRY)
+       Vertical White Columns, Value Above Column, Thin Baseline, Small Tick Marks
+       ========================================================================== */
+    .column-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .col-chart-box {
+      border: 1px solid #2a2a2a;
+      background: #050505;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .col-chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .col-chart-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-white);
+    }
+
+    .col-direction-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.45rem;
+      border: 1px solid #555555;
+      color: var(--text-secondary);
+    }
+
+    /* Column plotting viewport */
+    .col-plot-viewport {
+      height: 180px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      border-bottom: 1px solid #3a3a3a;
+      position: relative;
+      padding-top: 2rem;
+      gap: 0.5rem;
+    }
+
+    .col-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      flex: 1;
+      max-width: 75px;
+      position: relative;
+    }
+
+    .col-marker-top {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #ffffff;
+      margin-bottom: 0.15rem;
+      white-space: nowrap;
+    }
+
+    .col-val-text {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 0.35rem;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .col-pillar {
+      width: 26px;
+      height: 0%;
+      transition: height 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pillar-winner {
+      background: #ffffff;
+      border: 1px solid #ffffff;
+    }
+
+    .pillar-normal {
+      background: #8a8a8a;
+      border: 1px solid #8a8a8a;
+    }
+
+    .pillar-excluded {
+      background: transparent;
+      border: 1px dashed #555555;
+    }
+
+    .col-xaxis-row {
+      display: flex;
+      justify-content: space-around;
+      padding-top: 0.4rem;
+      gap: 0.5rem;
+    }
+
+    .col-xaxis-cell {
+      flex: 1;
+      max-width: 75px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .col-tick-cross {
+      font-size: 0.65rem;
+      color: #555555;
+      line-height: 1;
+    }
+
+    .col-db-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+
+    /* ==========================================================================
+       VALIDATION TABLE (SYS // 05 VALIDATION MATRIX)
+       Thin #333 Dividers, Rank in Boxed Cell, Monochrome Badges
+       ========================================================================== */
+    .table-overflow {
+      overflow-x: auto;
+    }
+
+    .tactical-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.84rem;
+    }
+
+    .tactical-table th {
+      background: #000000;
+      padding: 0.75rem 0.85rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+      border-bottom: 1px solid #3a3a3a;
+      font-weight: 700;
+    }
+
+    .tactical-table td {
+      padding: 0.85rem 0.85rem;
+      border-bottom: 1px solid #222222;
+      vertical-align: middle;
+    }
+
+    .tactical-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .tactical-table tr.winner-row {
+      background: #141414;
+    }
+
+    .tactical-table tr.excluded-row td {
+      color: var(--text-dim);
+    }
+
+    .rank-boxed-cell {
+      border: 1px solid #3a3a3a;
+      padding: 0.15rem 0.45rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-white);
+      text-align: center;
+      display: inline-block;
+    }
+
+    .winner-row .rank-boxed-cell {
+      border-color: #ffffff;
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .table-db-name {
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-white);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .table-diag-text {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      text-transform: uppercase;
+      max-width: 420px;
+    }
+
+    /* BADGES (Shape, Fill, Text - NO COLOR) */
+    .badge-hud {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    /* Valid: Solid White Badge, Black Text */
+    .badge-solid-valid {
+      background: #ffffff;
+      color: #000000;
+      border: 1px solid #ffffff;
+    }
+
+    /* Invalid: Outlined Badge, White Text */
+    .badge-outline-invalid {
+      background: transparent;
+      color: #ffffff;
+      border: 1px solid #ffffff;
+    }
+
+    /* Skipped: Dashed Outlined Badge, Grey Text */
+    .badge-dashed-skipped {
+      background: transparent;
+      color: #8a8a8a;
+      border: 1px dashed #8a8a8a;
+    }
+
+    /* Eligible: Solid or Light Grey Badge */
+    .badge-solid-eligible {
+      background: #2a2a2a;
+      color: #ffffff;
+      border: 1px solid #555555;
+    }
+
+    .winner-row .badge-solid-eligible {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+
+    /* Excluded: Outlined Dashed Badge */
+    .badge-outline-excluded {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px dashed #555555;
+    }
+
+    /* ==========================================================================
+       METADATA PODS (SYS // 06 SYSTEM METADATA)
+       ========================================================================== */
+    .meta-dual-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .meta-pod {
+      border: 1px solid #2a2a2a;
+      background: #050505;
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .meta-pod-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-white);
+      border-bottom: 1px solid #222222;
+      padding-bottom: 0.4rem;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .meta-row .m-key {
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .meta-row .m-val {
+      color: var(--text-white);
+      font-family: var(--font-mono);
+      text-align: right;
+      word-break: break-all;
+    }
+
+    /* ==========================================================================
+       FOOTER
+       ========================================================================== */
+    .tactical-footer {
+      max-width: 1760px;
+      margin: 2.5rem auto 3rem auto;
+      padding: 1.5rem;
+      text-align: center;
+      border-top: 1px solid #222222;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .tactical-footer p:first-child {
+      color: var(--text-white);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Status Bar & Telemetry -->
+  <header class="top-status-header">
+    <div class="header-inner">
+      <div class="header-primary-row">
+        <div class="header-title-block">
+          <h1>DATABASE BENCHMARKING &amp; RECOMMENDATION // TACTICAL EVALUATION UNIT</h1>
+          <p>WORKLOAD TELEMETRY // POSTGRESQL &bull; MONGODB &bull; QDRANT &bull; LANCEDB</p>
+        </div>
+        <div class="status-badge-live">
+          <span class="status-marker-square"></span>
+          <span id="topLiveStatus">STATUS: ACTIVE</span>
+        </div>
+      </div>
+      <div class="header-telemetry-row">
+        <div class="telemetry-cell"><span class="t-lbl">TIMESTAMP:</span> <span class="t-val" id="topTime">--</span></div>
+        <div class="telemetry-cell"><span class="t-lbl">DATASET_SHA:</span> <span class="t-val" id="topHash">--</span></div>
+        <div class="telemetry-cell"><span class="t-lbl">EXP_UUID:</span> <span class="t-val" id="topExpId">--</span></div>
+        <div class="telemetry-cell"><span class="t-lbl">PLATFORM:</span> <span class="t-val" id="topOs">--</span></div>
+      </div>
+    </div>
+    <div class="scan-track">
+      <div class="scan-beam" id="scanBeam"></div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="hud-main">
+
+    <!-- LEFT PANEL: Input -->
+    <aside class="tactical-box hud-panel-left" aria-label="Input Panel">
+      <div class="panel-tag-header">
+        <span class="sys-tag">[+] SYS // 01 INPUT</span>
+        <span class="sys-subtag" id="inputStatusTag">IDLE</span>
+      </div>
+
+      <!-- Command Terminal Box -->
+      <div class="terminal-command-box">
+        <div class="terminal-header">
+          <span class="terminal-prompt-label">EXECUTION COMMAND</span>
+          <button id="copyCmdBtn" class="btn-copy" title="Copy CLI Command to Clipboard">[ COPY ]</button>
+        </div>
+        <code class="terminal-code" id="cmdText">$ cargo run -- configs/sample.toml --json</code>
+        <div class="terminal-hint">FILE REDIRECT: $ cargo run -- configs/sample.toml --json &gt; results.json</div>
+      </div>
+
+      <!-- Action Buttons Row -->
+      <div class="actions-grid">
+        <button id="renderBtn" class="btn-tactical btn-tactical-primary" title="Execute Telemetry Render">[ ▶ RENDER ]</button>
+        <button id="loadSampleBtn" class="btn-tactical btn-tactical-secondary" title="Load Default Telemetry Sample">[ ↺ SAMPLE ]</button>
+        <div class="file-upload-wrap">
+          <button class="btn-tactical btn-tactical-outline" style="width: 100%;">[ 📁 UPLOAD ]</button>
+          <input type="file" id="fileInput" accept=".json,application/json" title="Select JSON telemetry file">
+        </div>
+      </div>
+
+      <!-- Error Box -->
+      <div id="errorAlert" class="tactical-error-box" role="alert">
+        <span class="error-header-tag">[ ! ERROR // MALFORMED INPUT ]</span>
+        <div class="error-body-text" id="errorMessage">INVALID JSON FORMAT</div>
+      </div>
+
+      <!-- Textarea -->
+      <div>
+        <div class="textarea-meta-row">
+          <span>PAYLOAD BUFFER:</span>
+          <span id="charCount">0 BYTES</span>
+        </div>
+        <textarea 
+          id="jsonInput" 
+          class="tactical-textarea" 
+          placeholder="PASTE --json OUTPUT PAYLOAD HERE..."
+          spellcheck="false"
+        ></textarea>
+      </div>
+    </aside>
+
+    <!-- RIGHT PANEL: Visualizations -->
+    <section class="hud-panel-right" id="outputSection" aria-label="Visualizations Panel">
+
+      <!-- Honesty & Methodology Caveats -->
+      <div class="notices-group">
+        <!-- LanceDB Warning -->
+        <div class="hazard-banner" id="lancedbWarning" style="display: none;">
+          <div class="hazard-title">[ WARNING // TARGET ARCHITECTURE NOTICE ]</div>
+          <div class="hazard-body">
+            LANCEDB: IN-MEMORY MODE. NOT DIRECTLY COMPARABLE WITH NETWORKED DATABASES (POSTGRESQL, MONGODB, QDRANT).
+          </div>
+        </div>
+
+        <!-- Relative Scoring Notice -->
+        <div class="info-banner">
+          <strong>[ NOTICE // RELATIVE SCORING ]</strong> SCORE 1.00 = BEST AMONG ELIGIBLE CANDIDATES IN THIS RUN, NOT UNIVERSALLY BEST.
+        </div>
+      </div>
+
+      <!-- 1. Winner Hero Card -->
+      <div class="winner-hero-box" id="winnerCard">
+        <div class="panel-tag-header" style="margin-bottom: 0.5rem; border-bottom: none; padding-bottom: 0;">
+          <span class="sys-tag" style="color: #ffffff;">[+] SYS // 02 RECOMMENDATION</span>
+          <span class="winner-status-tag" id="winnerBadge">RECOMMENDED CANDIDATE</span>
+        </div>
+
+        <div class="winner-split-grid">
+          <div>
+            <div class="winner-id-heading" id="winnerName">--</div>
+            <p class="winner-rationale" id="winnerReason">NO EVALUATION TELEMETRY LOADED.</p>
+            <div class="metric-weights-deck" id="contributingMetricsRow">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          <div class="winner-score-pod">
+            <div class="score-pod-label">COMPOSITE SCORE</div>
+            <div class="score-pod-number" id="winnerScore">--</div>
+            <div class="score-pod-sub">NORMALIZED [0.00 - 1.00]</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Ring Gauges Row (Composite Score per Database) -->
+      <div class="tactical-box">
+        <div class="panel-tag-header">
+          <span class="sys-tag">[+] SYS // 03 COMPOSITE RATINGS</span>
+          <span class="sys-subtag">[ DONUT TELEMETRY // HIGHER IS BETTER ]</span>
+        </div>
+        <div class="gauges-grid" id="gaugesContainer">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- 3. Vertical Column Performance Charts -->
+      <div class="tactical-box">
+        <div class="panel-tag-header">
+          <span class="sys-tag">[+] SYS // 04 PERFORMANCE TELEMETRY</span>
+          <span class="sys-subtag">[ VERTICAL COLUMNS // METRIC TRACE ]</span>
+        </div>
+        <div class="column-charts-grid">
+          <!-- Chart A: Latency -->
+          <div class="col-chart-box">
+            <div class="col-chart-header">
+              <span class="col-chart-title">AVERAGE LATENCY (MS)</span>
+              <span class="col-direction-tag">[ LOWER IS BETTER ]</span>
+            </div>
+            <div class="col-plot-viewport" id="chartLatencyPlot"></div>
+            <div class="col-xaxis-row" id="chartLatencyXAxis"></div>
+          </div>
+
+          <!-- Chart B: Throughput -->
+          <div class="col-chart-box">
+            <div class="col-chart-header">
+              <span class="col-chart-title">THROUGHPUT (OPS/SEC)</span>
+              <span class="col-direction-tag">[ HIGHER IS BETTER ]</span>
+            </div>
+            <div class="col-plot-viewport" id="chartThroughputPlot"></div>
+            <div class="col-xaxis-row" id="chartThroughputXAxis"></div>
+          </div>
+
+          <!-- Chart C: Success Rate -->
+          <div class="col-chart-box">
+            <div class="col-chart-header">
+              <span class="col-chart-title">SUCCESS RATE (%)</span>
+              <span class="col-direction-tag">[ HIGHER IS BETTER ]</span>
+            </div>
+            <div class="col-plot-viewport" id="chartSuccessPlot"></div>
+            <div class="col-xaxis-row" id="chartSuccessXAxis"></div>
+          </div>
+
+          <!-- Chart D: Accuracy & Recall (if present) -->
+          <div class="col-chart-box" id="chartAccuracyCard" style="display: none;">
+            <div class="col-chart-header">
+              <span class="col-chart-title">ACCURACY / RECALL (%)</span>
+              <span class="col-direction-tag">[ HIGHER IS BETTER ]</span>
+            </div>
+            <div class="col-plot-viewport" id="chartAccuracyPlot"></div>
+            <div class="col-xaxis-row" id="chartAccuracyXAxis"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Validation Matrix Table -->
+      <div class="tactical-box">
+        <div class="panel-tag-header">
+          <span class="sys-tag">[+] SYS // 05 VALIDATION MATRIX</span>
+          <span class="sys-subtag">[ CONFORMANCE &amp; ELIGIBILITY CRITERIA ]</span>
+        </div>
+        <div class="table-overflow">
+          <table class="tactical-table">
+            <thead>
+              <tr>
+                <th>RANK</th>
+                <th>DATABASE</th>
+                <th>VALIDATION</th>
+                <th>ELIGIBILITY</th>
+                <th>SCORE</th>
+                <th>DIAGNOSTIC LOG / EXCLUSION REASON</th>
+              </tr>
+            </thead>
+            <tbody id="validationTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. System & Dataset Metadata -->
+      <div class="tactical-box">
+        <div class="panel-tag-header">
+          <span class="sys-tag">[+] SYS // 06 SYSTEM METADATA</span>
+          <span class="sys-subtag">[ HARDWARE VERIFICATION &amp; REPRODUCIBILITY ]</span>
+        </div>
+        <div class="meta-dual-grid">
+          <div class="meta-pod">
+            <div class="meta-pod-title">ENVIRONMENT HARDWARE TELEMETRY</div>
+            <div class="meta-row"><span class="m-key">OPERATING SYSTEM:</span> <span class="m-val" id="metaOs">--</span></div>
+            <div class="meta-row"><span class="m-key">CPU CORES:</span> <span class="m-val" id="metaCores">--</span></div>
+            <div class="meta-row"><span class="m-key">TOTAL SYSTEM RAM:</span> <span class="m-val" id="metaRam">--</span></div>
+            <div class="meta-row"><span class="m-key">TIMESTAMP UTC:</span> <span class="m-val" id="metaTime">--</span></div>
+            <div class="meta-row"><span class="m-key">EXPERIMENT UUID:</span> <span class="m-val" id="metaExpId" style="font-size: 0.72rem;">--</span></div>
+          </div>
+          <div class="meta-pod">
+            <div class="meta-pod-title">DATASET PROVENANCE &amp; HASH</div>
+            <div class="meta-row"><span class="m-key">DATASET PATH:</span> <span class="m-val" id="metaDatasetPath">--</span></div>
+            <div class="meta-row"><span class="m-key">DOCUMENT COUNT:</span> <span class="m-val" id="metaDocCount">--</span></div>
+            <div class="meta-row"><span class="m-key">ORIGINAL SIZE:</span> <span class="m-val" id="metaFileSize">--</span></div>
+            <div class="meta-row"><span class="m-key">STORAGE FORMAT:</span> <span class="m-val" id="metaFormat">--</span></div>
+            <div class="meta-row"><span class="m-key">SHA-256 DIGEST:</span> <span class="m-val" id="metaHash" style="font-size: 0.72rem;">--</span></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Honesty Footer -->
+  <footer class="tactical-footer">
+    <p>SMALL MVP BENCHMARK. NOT A DEFINITIVE PERFORMANCE STUDY.</p>
+    <p>DATABASE BENCHMARKING &amp; RECOMMENDATION TOOL &bull; LOCAL TACTICAL TEST SUITE</p>
+  </footer>
+
+  <!-- ==========================================================================
+       Client Logic & Embedded Sample Data
+       ========================================================================== -->
+  <script>
+    // Embedded sample JSON from real CLI run (works offline & via file://)
+    const EMBEDDED_SAMPLE_JSON = "{\n  \"environment\": {\n    \"experiment_id\": \"870ad92a-bba3-4557-97d5-13325a435551\",\n    \"timestamp\": \"2026-10-11T02:56:35.748361600Z\",\n    \"os\": \"Windows 11 Home Single Language\",\n    \"cpu_cores\": 8,\n    \"total_ram_mb\": 7876\n  },\n  \"dataset\": {\n    \"path\": \"./datasets/sample.jsonl\",\n    \"format\": \"jsonl\",\n    \"document_count\": 12,\n    \"original_size_bytes\": 6979,\n    \"dataset_hash\": \"00cb6a8862c32afff2806a737966412f13e74684ee384601da95ecc924c734a2\",\n    \"empty_text_policy\": \"reject\",\n    \"trim_whitespace\": true\n  },\n  \"benchmark_results\": [\n    {\n      \"database\": \"postgres\",\n      \"insert\": {\n        \"duration\": {\n          \"secs\": 0,\n          \"nanos\": 57152400\n        },\n        \"status\": \"Success\",\n        \"result_count\": 12\n      },\n      \"queries\": [\n        {\n          \"duration\": {\n            \"secs\": 0,\n            \"nanos\": 14561400\n          },\n          \"status\": \"Success\",\n          \"result_count\": 12\n        }\n      ],\n      \"delete\": {\n        \"duration\": {\n          \"secs\": 0,\n          \"nanos\": 15010500\n        },\n        \"status\": \"Success\",\n        \"result_count\": 0\n      }\n    },\n    {\n      \"database\": \"mongodb\",\n      \"insert\": {\n        \"duration\": {\n          \"secs\": 0,\n          \"nanos\": 107412500\n        },\n        \"status\": \"Success\",\n        \"result_count\": 12\n      },\n      \"queries\": [\n        {\n          \"duration\": {\n            \"secs\": 0,\n            \"nanos\": 66902900\n          },\n          \"status\": \"Success\",\n          \"result_count\": 12\n        }\n      ],\n      \"delete\": {\n        \"duration\": {\n          \"secs\": 0,\n          \"nanos\": 14549200\n        },\n        \"status\": \"Success\",\n        \"result_count\": 0\n      }\n    },\n    {\n      \"database\": \"qdrant\",\n      \"insert\": {\n        \"duration\": {\n          \"secs\": 0,\n          \"nanos\": 365858600\n        },\n        \"status\": \"Success\",\n        \"result_count\": 12\n      },\n      \"queries\": [\n        {\n          \"duration\": {\n            \"secs\": 0,\n            \"nanos\": 300\n          },\n          \"status\": \"Success\",\n          \"result_count\": 0\n        }\n      ],\n      \"delete\": {\n        \"duration\": {\n          \"secs\": 0,\n          \"nanos\": 9177700\n        },\n        \"status\": \"Success\",\n        \"result_count\": 0\n      }\n    },\n    {\n      \"database\": \"lancedb\",\n      \"insert\": {\n        \"duration\": {\n          \"secs\": 0,\n          \"nanos\": 91300\n        },\n        \"status\": \"Success\",\n        \"result_count\": 12\n      },\n      \"queries\": [\n        {\n          \"duration\": {\n            \"secs\": 0,\n            \"nanos\": 400\n          },\n          \"status\": \"Success\",\n          \"result_count\": 0\n        }\n      ],\n      \"delete\": {\n        \"duration\": {\n          \"secs\": 0,\n          \"nanos\": 37100\n        },\n        \"status\": \"Success\",\n        \"result_count\": 0\n      }\n    }\n  ],\n  \"evaluation_report\": {\n    \"workload_name\": \"text-mvp-test\",\n    \"databases\": {\n      \"__aggregate__failed_operations\": {\n        \"database_name\": \"__aggregate__failed_operations\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.0,\n            \"unit\": \"\"\n          },\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 0.0,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 0.0,\n            \"unit\": \"\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 0.0,\n            \"unit\": \"\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 0.0,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          }\n        }\n      },\n      \"mongodb\": {\n        \"database_name\": \"mongodb\",\n        \"validation_status\": \"Valid\",\n        \"metrics\": {\n          \"success_rate\": {\n            \"name\": \"success_rate\",\n            \"value\": 100.0,\n            \"unit\": \"%\"\n          },\n          \"delete_latency\": {\n            \"name\": \"delete_latency\",\n            \"value\": 14.5492,\n            \"unit\": \"ms\"\n          },\n          \"insert_latency\": {\n            \"name\": \"insert_latency\",\n            \"value\": 107.4125,\n            \"unit\": \"ms\"\n          },\n          \"min_query_latency\": {\n            \"name\": \"min_query_latency\",\n            \"value\": 66.9029,\n            \"unit\": \"ms\"\n          },\n          \"average_latency\": {\n            \"name\": \"average_latency\",\n            \"value\": 62.954865999999996,\n            \"unit\": \"ms\"\n          },\n          \"min_latency\": {\n            \"name\": \"min_latency\",\n            \"value\": 14.5492,\n            \"unit\": \"ms\"\n          },\n          \"max_latency\": {\n            \"name\": \"max_latency\",\n            \"value\": 107.4125,\n            \"unit\": \"ms\"\n          },\n          \"throughput\": {\n            \"name\": \"throughput\",\n            \"value\": 15.884395487560928,\n            \"unit\": \"ops/sec\"\n          },\n          \"total_operations\": {\n            \"name\": \"total_operations\",\n            \"value\": 3.0,\n            \"unit\": \"count\"\n          },\n          \"max_query_latency\": {\n            \"name\": \"max_query_latency\",\n            \"value\": 66.9029,\n            \"unit\": \"ms\"\n          },\n          \"successful_operations\": {\n            \"name\": \"successful_operations\",\n            \"value\": 3.0,\n            \"unit\": \"count\"\n          },\n          \"average_query_latency\": {\n            \"name\": \"average_query_latency\",\n            \"value\": 66.9029,\n            \"unit\": \"ms\"\n          },\n          \"failed_operations\": {\n            \"name\": \"failed_operations\",\n            \"value\": 0.0,\n            \"unit\": \"count\"\n          }\n        }\n      },\n      \"__aggregate__delete_latency\": {\n        \"database_name\": \"__aggregate__delete_latency\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 36.340105506875005,\n            \"unit\": \"\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 9.693625,\n            \"unit\": \"\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 15.0105,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 11.86345,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.0371,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          }\n        }\n      },\n      \"__aggregate__successful_operations\": {\n        \"database_name\": \"__aggregate__successful_operations\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 3.0,\n            \"unit\": \"\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 3.0,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 3.0,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 3.0,\n            \"unit\": \"\"\n          },\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 0.0,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"__aggregate__success_rate\": {\n        \"database_name\": \"__aggregate__success_rate\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 100.0,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 100.0,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 100.0,\n            \"unit\": \"\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 100.0,\n            \"unit\": \"\"\n          },\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 0.0,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"qdrant\": {\n        \"database_name\": \"qdrant\",\n        \"validation_status\": \"Valid\",\n        \"metrics\": {\n          \"min_query_latency\": {\n            \"name\": \"min_query_latency\",\n            \"value\": 0.0003,\n            \"unit\": \"ms\"\n          },\n          \"insert_latency\": {\n            \"name\": \"insert_latency\",\n            \"value\": 365.85859999999997,\n            \"unit\": \"ms\"\n          },\n          \"delete_latency\": {\n            \"name\": \"delete_latency\",\n            \"value\": 9.1777,\n            \"unit\": \"ms\"\n          },\n          \"max_query_latency\": {\n            \"name\": \"max_query_latency\",\n            \"value\": 0.0003,\n            \"unit\": \"ms\"\n          },\n          \"average_query_latency\": {\n            \"name\": \"average_query_latency\",\n            \"value\": 0.0003,\n            \"unit\": \"ms\"\n          },\n          \"throughput\": {\n            \"name\": \"throughput\",\n            \"value\": 7.999219276198643,\n            \"unit\": \"ops/sec\"\n          },\n          \"total_operations\": {\n            \"name\": \"total_operations\",\n            \"value\": 3.0,\n            \"unit\": \"count\"\n          },\n          \"success_rate\": {\n            \"name\": \"success_rate\",\n            \"value\": 100.0,\n            \"unit\": \"%\"\n          },\n          \"max_latency\": {\n            \"name\": \"max_latency\",\n            \"value\": 365.85859999999997,\n            \"unit\": \"ms\"\n          },\n          \"successful_operations\": {\n            \"name\": \"successful_operations\",\n            \"value\": 3.0,\n            \"unit\": \"count\"\n          },\n          \"failed_operations\": {\n            \"name\": \"failed_operations\",\n            \"value\": 0.0,\n            \"unit\": \"count\"\n          },\n          \"average_latency\": {\n            \"name\": \"average_latency\",\n            \"value\": 125.01219999999999,\n            \"unit\": \"ms\"\n          },\n          \"min_latency\": {\n            \"name\": \"min_latency\",\n            \"value\": 0.0003,\n            \"unit\": \"ms\"\n          }\n        }\n      },\n      \"lancedb\": {\n        \"database_name\": \"lancedb\",\n        \"validation_status\": \"Valid\",\n        \"metrics\": {\n          \"delete_latency\": {\n            \"name\": \"delete_latency\",\n            \"value\": 0.0371,\n            \"unit\": \"ms\"\n          },\n          \"average_query_latency\": {\n            \"name\": \"average_query_latency\",\n            \"value\": 0.00039999999999999996,\n            \"unit\": \"ms\"\n          },\n          \"min_query_latency\": {\n            \"name\": \"min_query_latency\",\n            \"value\": 0.00039999999999999996,\n            \"unit\": \"ms\"\n          },\n          \"average_latency\": {\n            \"name\": \"average_latency\",\n            \"value\": 0.042933,\n            \"unit\": \"ms\"\n          },\n          \"min_latency\": {\n            \"name\": \"min_latency\",\n            \"value\": 0.00039999999999999996,\n            \"unit\": \"ms\"\n          },\n          \"max_latency\": {\n            \"name\": \"max_latency\",\n            \"value\": 0.09129999999999999,\n            \"unit\": \"ms\"\n          },\n          \"throughput\": {\n            \"name\": \"throughput\",\n            \"value\": 23291.92546583851,\n            \"unit\": \"ops/sec\"\n          },\n          \"success_rate\": {\n            \"name\": \"success_rate\",\n            \"value\": 100.0,\n            \"unit\": \"%\"\n          },\n          \"failed_operations\": {\n            \"name\": \"failed_operations\",\n            \"value\": 0.0,\n            \"unit\": \"count\"\n          },\n          \"successful_operations\": {\n            \"name\": \"successful_operations\",\n            \"value\": 3.0,\n            \"unit\": \"count\"\n          },\n          \"total_operations\": {\n            \"name\": \"total_operations\",\n            \"value\": 3.0,\n            \"unit\": \"count\"\n          },\n          \"insert_latency\": {\n            \"name\": \"insert_latency\",\n            \"value\": 0.09129999999999999,\n            \"unit\": \"ms\"\n          },\n          \"max_query_latency\": {\n            \"name\": \"max_query_latency\",\n            \"value\": 0.00039999999999999996,\n            \"unit\": \"ms\"\n          }\n        }\n      },\n      \"postgres\": {\n        \"database_name\": \"postgres\",\n        \"validation_status\": \"Valid\",\n        \"metrics\": {\n          \"average_query_latency\": {\n            \"name\": \"average_query_latency\",\n            \"value\": 14.5614,\n            \"unit\": \"ms\"\n          },\n          \"failed_operations\": {\n            \"name\": \"failed_operations\",\n            \"value\": 0.0,\n            \"unit\": \"count\"\n          },\n          \"min_query_latency\": {\n            \"name\": \"min_query_latency\",\n            \"value\": 14.5614,\n            \"unit\": \"ms\"\n          },\n          \"total_operations\": {\n            \"name\": \"total_operations\",\n            \"value\": 3.0,\n            \"unit\": \"count\"\n          },\n          \"average_latency\": {\n            \"name\": \"average_latency\",\n            \"value\": 28.908099999999997,\n            \"unit\": \"ms\"\n          },\n          \"max_latency\": {\n            \"name\": \"max_latency\",\n            \"value\": 57.1524,\n            \"unit\": \"ms\"\n          },\n          \"delete_latency\": {\n            \"name\": \"delete_latency\",\n            \"value\": 15.0105,\n            \"unit\": \"ms\"\n          },\n          \"insert_latency\": {\n            \"name\": \"insert_latency\",\n            \"value\": 57.1524,\n            \"unit\": \"ms\"\n          },\n          \"max_query_latency\": {\n            \"name\": \"max_query_latency\",\n            \"value\": 14.5614,\n            \"unit\": \"ms\"\n          },\n          \"min_latency\": {\n            \"name\": \"min_latency\",\n            \"value\": 14.5614,\n            \"unit\": \"ms\"\n          },\n          \"throughput\": {\n            \"name\": \"throughput\",\n            \"value\": 34.59238068223094,\n            \"unit\": \"ops/sec\"\n          },\n          \"success_rate\": {\n            \"name\": \"success_rate\",\n            \"value\": 100.0,\n            \"unit\": \"%\"\n          },\n          \"successful_operations\": {\n            \"name\": \"successful_operations\",\n            \"value\": 3.0,\n            \"unit\": \"count\"\n          }\n        }\n      },\n      \"__aggregate__insert_latency\": {\n        \"database_name\": \"__aggregate__insert_latency\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 132.6287,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 365.85859999999997,\n            \"unit\": \"\"\n          },\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 19573.719314224996,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.09129999999999999,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 82.28245,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"__aggregate__throughput\": {\n        \"database_name\": \"__aggregate__throughput\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 5837.6003653211255,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 25.238388084895934,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 7.999219276198643,\n            \"unit\": \"\"\n          },\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 101551248.18492937,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 23291.92546583851,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"__aggregate__max_latency\": {\n        \"database_name\": \"__aggregate__max_latency\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 19573.719314224996,\n            \"unit\": \"\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 132.6287,\n            \"unit\": \"\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 365.85859999999997,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.09129999999999999,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 82.28245,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          }\n        }\n      },\n      \"__aggregate__min_latency\": {\n        \"database_name\": \"__aggregate__min_latency\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 52.961660981875,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 7.277825,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 7.274800000000001,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.0003,\n            \"unit\": \"\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 14.5614,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"__aggregate__max_query_latency\": {\n        \"database_name\": \"__aggregate__max_query_latency\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 757.2239605925,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.0003,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 7.280900000000001,\n            \"unit\": \"\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 66.9029,\n            \"unit\": \"\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 20.36625,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"__aggregate__average_query_latency\": {\n        \"database_name\": \"__aggregate__average_query_latency\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 757.2239605925,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 20.36625,\n            \"unit\": \"\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 66.9029,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.0003,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 7.280900000000001,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"__aggregate__average_latency\": {\n        \"database_name\": \"__aggregate__average_latency\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 125.01219999999999,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.042933,\n            \"unit\": \"\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 54.229524749999996,\n            \"unit\": \"\"\n          },\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 2165.9199930817485,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 45.931483,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"__aggregate__min_query_latency\": {\n        \"database_name\": \"__aggregate__min_query_latency\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 66.9029,\n            \"unit\": \"\"\n          },\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 757.2239605925,\n            \"unit\": \"\"\n          },\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 20.36625,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 7.280900000000001,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 0.0003,\n            \"unit\": \"\"\n          }\n        }\n      },\n      \"__aggregate__total_operations\": {\n        \"database_name\": \"__aggregate__total_operations\",\n        \"validation_status\": \"Skipped\",\n        \"metrics\": {\n          \"mean\": {\n            \"name\": \"mean\",\n            \"value\": 3.0,\n            \"unit\": \"\"\n          },\n          \"variance\": {\n            \"name\": \"variance\",\n            \"value\": 0.0,\n            \"unit\": \"\"\n          },\n          \"max\": {\n            \"name\": \"max\",\n            \"value\": 3.0,\n            \"unit\": \"\"\n          },\n          \"median\": {\n            \"name\": \"median\",\n            \"value\": 3.0,\n            \"unit\": \"\"\n          },\n          \"min\": {\n            \"name\": \"min\",\n            \"value\": 3.0,\n            \"unit\": \"\"\n          },\n          \"count\": {\n            \"name\": \"count\",\n            \"value\": 4.0,\n            \"unit\": \"count\"\n          }\n        }\n      }\n    },\n    \"timestamp\": \"\"\n  },\n  \"recommendation_report\": {\n    \"workload_name\": \"text-mvp-test\",\n    \"ranked_candidates\": [\n      {\n        \"database\": \"lancedb\",\n        \"score\": 1.0,\n        \"rank\": 1,\n        \"contributing_metrics\": {\n          \"throughput\": 1.0,\n          \"latency\": 1.0\n        },\n        \"explanation\": \"Ranked #1 with composite score 1.00 (contributing metrics: latency: 1.00, throughput: 1.00).\",\n        \"status\": \"Eligible\"\n      },\n      {\n        \"database\": \"qdrant\",\n        \"score\": 0.5,\n        \"rank\": 2,\n        \"contributing_metrics\": {\n          \"throughput\": 0.0,\n          \"latency\": 1.0\n        },\n        \"explanation\": \"Ranked #2 with composite score 0.50 (contributing metrics: latency: 1.00, throughput: 0.00).\",\n        \"status\": \"Eligible\"\n      },\n      {\n        \"database\": \"postgres\",\n        \"score\": 0.3917,\n        \"rank\": 3,\n        \"contributing_metrics\": {\n          \"latency\": 0.782,\n          \"throughput\": 0.001\n        },\n        \"explanation\": \"Ranked #3 with composite score 0.39 (contributing metrics: latency: 0.78, throughput: 0.00).\",\n        \"status\": \"Eligible\"\n      },\n      {\n        \"database\": \"mongodb\",\n        \"score\": 0.0002,\n        \"rank\": 4,\n        \"contributing_metrics\": {\n          \"latency\": 0.0,\n          \"throughput\": 0.0\n        },\n        \"explanation\": \"Ranked #4 with composite score 0.00 (contributing metrics: latency: 0.00, throughput: 0.00).\",\n        \"status\": \"Eligible\"\n      }\n    ],\n    \"best_candidate\": \"lancedb\",\n    \"excluded_candidates\": [],\n    \"summary\": \"Recommended database 'lancedb' with composite score 1.00 for workload 'text-mvp-test'. 4 eligible candidates ranked, 0 excluded.\"\n  }\n}\n";
+
+    // DOM Elements
+    const jsonInput = document.getElementById("jsonInput");
+    const renderBtn = document.getElementById("renderBtn");
+    const loadSampleBtn = document.getElementById("loadSampleBtn");
+    const fileInput = document.getElementById("fileInput");
+    const copyCmdBtn = document.getElementById("copyCmdBtn");
+    const errorAlert = document.getElementById("errorAlert");
+    const errorMessage = document.getElementById("errorMessage");
+    const charCount = document.getElementById("charCount");
+    const inputStatusTag = document.getElementById("inputStatusTag");
+    const scanBeam = document.getElementById("scanBeam");
+
+    // Top Telemetry Header
+    const topLiveStatus = document.getElementById("topLiveStatus");
+    const topTime = document.getElementById("topTime");
+    const topHash = document.getElementById("topHash");
+    const topExpId = document.getElementById("topExpId");
+    const topOs = document.getElementById("topOs");
+
+    // Output Elements
+    const lancedbWarning = document.getElementById("lancedbWarning");
+    const winnerName = document.getElementById("winnerName");
+    const winnerScore = document.getElementById("winnerScore");
+    const winnerReason = document.getElementById("winnerReason");
+    const winnerBadge = document.getElementById("winnerBadge");
+    const contributingMetricsRow = document.getElementById("contributingMetricsRow");
+    const validationTableBody = document.getElementById("validationTableBody");
+    const gaugesContainer = document.getElementById("gaugesContainer");
+
+    // Column Charts
+    const chartLatencyPlot = document.getElementById("chartLatencyPlot");
+    const chartLatencyXAxis = document.getElementById("chartLatencyXAxis");
+    const chartThroughputPlot = document.getElementById("chartThroughputPlot");
+    const chartThroughputXAxis = document.getElementById("chartThroughputXAxis");
+    const chartSuccessPlot = document.getElementById("chartSuccessPlot");
+    const chartSuccessXAxis = document.getElementById("chartSuccessXAxis");
+    const chartAccuracyCard = document.getElementById("chartAccuracyCard");
+    const chartAccuracyPlot = document.getElementById("chartAccuracyPlot");
+    const chartAccuracyXAxis = document.getElementById("chartAccuracyXAxis");
+
+    // Metadata Elements
+    const metaOs = document.getElementById("metaOs");
+    const metaCores = document.getElementById("metaCores");
+    const metaRam = document.getElementById("metaRam");
+    const metaTime = document.getElementById("metaTime");
+    const metaExpId = document.getElementById("metaExpId");
+    const metaDatasetPath = document.getElementById("metaDatasetPath");
+    const metaDocCount = document.getElementById("metaDocCount");
+    const metaFileSize = document.getElementById("metaFileSize");
+    const metaFormat = document.getElementById("metaFormat");
+    const metaHash = document.getElementById("metaHash");
+
+    // --------------------------------------------------------------------------
+    // Utility Helpers
+    // --------------------------------------------------------------------------
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "--";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatNumber(val, decimals = 2) {
+      if (val === null || val === undefined || isNaN(val)) return "--";
+      return Number(val).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function triggerScanAnimation() {
+      scanBeam.classList.remove("scanning");
+      void scanBeam.offsetWidth; // re-flow
+      scanBeam.classList.add("scanning");
+
+      topLiveStatus.textContent = "SCANNING...";
+      setTimeout(() => {
+        topLiveStatus.textContent = "STATUS: ACTIVE";
+      }, 650);
+    }
+
+    function showError(msg) {
+      errorAlert.classList.add("visible");
+      errorMessage.textContent = msg;
+      inputStatusTag.textContent = "ERR // CHECK SYNTAX";
+    }
+
+    function hideError() {
+      errorAlert.classList.remove("visible");
+      inputStatusTag.textContent = "LOCKED // READY";
+    }
+
+    // --------------------------------------------------------------------------
+    // Copy Command to Clipboard
+    // --------------------------------------------------------------------------
+    copyCmdBtn.addEventListener("click", () => {
+      const text = document.getElementById("cmdText").textContent.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        copyCmdBtn.textContent = "[ COPIED ]";
+        setTimeout(() => {
+          copyCmdBtn.textContent = "[ COPY ]";
+        }, 1800);
+      }).catch(() => {
+        copyCmdBtn.textContent = "[ COPIED ]";
+      });
+    });
+
+    // Textarea input char count
+    jsonInput.addEventListener("input", () => {
+      const len = jsonInput.value.length;
+      charCount.textContent = `${len.toLocaleString()} BYTES`;
+    });
+
+    // File Upload Handler
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        jsonInput.value = event.target.result;
+        charCount.textContent = `${jsonInput.value.length.toLocaleString()} BYTES`;
+        renderDashboard();
+      };
+      reader.readAsText(file);
+    });
+
+    // Load Sample Button Handler
+    loadSampleBtn.addEventListener("click", () => {
+      fetch("./sample-output.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Fetch failed");
+          return res.text();
+        })
+        .then(text => {
+          jsonInput.value = text;
+          charCount.textContent = `${text.length.toLocaleString()} BYTES`;
+          renderDashboard();
+        })
+        .catch(() => {
+          jsonInput.value = EMBEDDED_SAMPLE_JSON;
+          charCount.textContent = `${EMBEDDED_SAMPLE_JSON.length.toLocaleString()} BYTES`;
+          renderDashboard();
+        });
+    });
+
+    renderBtn.addEventListener("click", renderDashboard);
+
+    // --------------------------------------------------------------------------
+    // Dashboard Visualization Core Logic
+    // --------------------------------------------------------------------------
+    function renderDashboard() {
+      triggerScanAnimation();
+
+      const rawText = jsonInput.value.trim();
+      if (!rawText) {
+        showError("BUFFER EMPTY. PASTE TELEMETRY JSON OR LOAD SAMPLE.");
+        return;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (err) {
+        showError("PARSE FAILURE: " + err.message.toUpperCase());
+        return;
+      }
+
+      if (!data || typeof data !== "object") {
+        showError("SCHEMA ERROR: ROOT MUST BE A JSON OBJECT.");
+        return;
+      }
+
+      hideError();
+
+      try {
+        const env = data.environment || {};
+        const dataset = data.dataset || {};
+        const evalReport = data.evaluation_report || {};
+        const recReport = data.recommendation_report || {};
+        const databasesMap = evalReport.databases || {};
+
+        // Filter out aggregate keys
+        const realEvalDbs = {};
+        for (const [k, v] of Object.entries(databasesMap)) {
+          if (!k.startsWith("__")) {
+            realEvalDbs[k] = v;
+          }
+        }
+
+        const rankedCandidates = Array.isArray(recReport.ranked_candidates) ? recReport.ranked_candidates : [];
+        const excludedCandidates = Array.isArray(recReport.excluded_candidates) ? recReport.excluded_candidates : [];
+        const bestCandidateName = recReport.best_candidate || (rankedCandidates[0] ? rankedCandidates[0].database : null);
+
+        // 1. LanceDB Warning Check
+        const allDbNames = new Set([
+          ...Object.keys(realEvalDbs),
+          ...rankedCandidates.map(c => c.database),
+          ...excludedCandidates.map(c => c.database)
+        ]);
+
+        if (allDbNames.has("lancedb")) {
+          lancedbWarning.style.display = "block";
+        } else {
+          lancedbWarning.style.display = "none";
+        }
+
+        // 2. Winner Hero Card
+        renderWinnerCard(recReport, rankedCandidates, bestCandidateName);
+
+        // 3. Ring Donut Gauges (SYS // 03)
+        renderCompositeGauges(realEvalDbs, rankedCandidates, excludedCandidates, bestCandidateName);
+
+        // 4. Vertical Column Performance Charts (SYS // 04)
+        renderVerticalColumnCharts(realEvalDbs, rankedCandidates, excludedCandidates, bestCandidateName);
+
+        // 5. Validation Matrix Table (SYS // 05)
+        renderValidationTable(realEvalDbs, rankedCandidates, excludedCandidates, bestCandidateName);
+
+        // 6. System Metadata (SYS // 06)
+        renderMetadata(env, dataset);
+
+      } catch (renderErr) {
+        console.error("Rendering error:", renderErr);
+        showError("RENDER CRASH: " + renderErr.message.toUpperCase());
+      }
+    }
+
+    // --------------------------------------------------------------------------
+    // Winner Hero Card Render
+    // --------------------------------------------------------------------------
+    function renderWinnerCard(recReport, rankedCandidates, bestCandidateName) {
+      if (!bestCandidateName && rankedCandidates.length === 0) {
+        winnerName.textContent = "NONE ELIGIBLE";
+        winnerScore.textContent = "0.00";
+        winnerReason.textContent = (recReport.summary || "NO CANDIDATES MET EVALUATION CRITERIA.").toUpperCase();
+        contributingMetricsRow.innerHTML = "";
+        return;
+      }
+
+      const winnerCand = rankedCandidates.find(c => c.database === bestCandidateName) || rankedCandidates[0];
+      const name = winnerCand ? winnerCand.database : (bestCandidateName || "--");
+      const score = winnerCand ? winnerCand.score : 0.0;
+
+      winnerName.textContent = name.toUpperCase();
+      winnerScore.textContent = formatNumber(score, 2);
+
+      const summaryText = winnerCand && winnerCand.explanation ? winnerCand.explanation : (recReport.summary || ("RECOMMENDED DATABASE " + name.toUpperCase() + " WITH COMPOSITE SCORE " + formatNumber(score, 2)));
+      winnerReason.textContent = summaryText.toUpperCase();
+
+      // Metric weights breakdown boxes
+      contributingMetricsRow.innerHTML = "";
+      if (winnerCand && winnerCand.contributing_metrics && typeof winnerCand.contributing_metrics === "object") {
+        for (const [dim, weight] of Object.entries(winnerCand.contributing_metrics)) {
+          const pod = document.createElement("div");
+          pod.className = "weight-box";
+          pod.innerHTML = "[" + escapeHtml(dim.toUpperCase()) + " WEIGHT: <strong>" + formatNumber(weight, 2) + "</strong>]";
+          contributingMetricsRow.appendChild(pod);
+        }
+      }
+    }
+
+    // --------------------------------------------------------------------------
+    // Ring / Donut Gauges (Composite Score)
+    // --------------------------------------------------------------------------
+    function renderCompositeGauges(realEvalDbs, rankedCandidates, excludedCandidates, bestCandidateName) {
+      gaugesContainer.innerHTML = "";
+
+      const allDbKeys = Array.from(new Set([
+        ...rankedCandidates.map(c => c.database),
+        ...excludedCandidates.map(c => c.database),
+        ...Object.keys(realEvalDbs)
+      ]));
+
+      // Sort by rank / score descending
+      allDbKeys.sort((a, b) => {
+        const candA = rankedCandidates.find(c => c.database === a);
+        const candB = rankedCandidates.find(c => c.database === b);
+        if (candA && candB) return (candA.rank || 99) - (candB.rank || 99);
+        if (candA && !candB) return -1;
+        if (!candA && candB) return 1;
+        return a.localeCompare(b);
+      });
+
+      // SVG radius 38 => circumference ~ 238.76
+      const CIRC = 238.76;
+
+      for (const dbName of allDbKeys) {
+        const ranked = rankedCandidates.find(c => c.database === dbName);
+        const excluded = excludedCandidates.find(c => c.database === dbName);
+        const isWinner = (dbName === bestCandidateName);
+        const isExcluded = !!excluded;
+        const score = ranked ? ranked.score : 0.0;
+
+        const cell = document.createElement("div");
+        cell.className = "gauge-cell" + (isWinner ? " gauge-winner" : (isExcluded ? " gauge-excluded" : ""));
+
+        const topTag = document.createElement("div");
+        topTag.className = "gauge-top-label";
+        topTag.textContent = dbName.toUpperCase();
+        cell.appendChild(topTag);
+
+        const svgWrap = document.createElement("div");
+        svgWrap.className = "gauge-svg-wrap";
+
+        // SVG ring
+        const targetOffset = CIRC * (1 - Math.max(0, Math.min(1, score)));
+        const strokeClass = isWinner ? "bar-winner" : (isExcluded ? "bar-excluded" : "bar-eligible");
+
+        svgWrap.innerHTML = `
+          <svg class="gauge-svg" viewBox="0 0 100 100">
+            <circle class="gauge-circle-track" cx="50" cy="50" r="38"></circle>
+            <circle class="gauge-circle-bar ${strokeClass}" cx="50" cy="50" r="38"></circle>
+          </svg>
+          <div class="gauge-center-val">${isExcluded ? "--" : formatNumber(score, 2)}</div>
+        `;
+
+        cell.appendChild(svgWrap);
+
+        const rankTag = document.createElement("div");
+        rankTag.className = "gauge-rank-tag";
+        if (isWinner) {
+          rankTag.textContent = "RANK #01 [TOP]";
+        } else if (ranked && ranked.rank) {
+          rankTag.textContent = `RANK #${String(ranked.rank).padStart(2, "0")}`;
+        } else {
+          rankTag.textContent = "[ EXCLUDED ]";
+        }
+        cell.appendChild(rankTag);
+
+        gaugesContainer.appendChild(cell);
+
+        // Animate the stroke-dashoffset after insertion
+        const circleBar = svgWrap.querySelector(".gauge-circle-bar");
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (circleBar) {
+              circleBar.style.strokeDashoffset = targetOffset.toFixed(2);
+            }
+          });
+        });
+      }
+    }
+
+    // --------------------------------------------------------------------------
+    // Vertical Column Performance Charts
+    // --------------------------------------------------------------------------
+    function renderVerticalColumnCharts(realEvalDbs, rankedCandidates, excludedCandidates, bestCandidateName) {
+      // Clear plotting areas
+      chartLatencyPlot.innerHTML = "";
+      chartLatencyXAxis.innerHTML = "";
+      chartThroughputPlot.innerHTML = "";
+      chartThroughputXAxis.innerHTML = "";
+      chartSuccessPlot.innerHTML = "";
+      chartSuccessXAxis.innerHTML = "";
+      chartAccuracyPlot.innerHTML = "";
+      chartAccuracyXAxis.innerHTML = "";
+
+      const allDbNames = Array.from(new Set([
+        ...rankedCandidates.map(c => c.database),
+        ...excludedCandidates.map(c => c.database),
+        ...Object.keys(realEvalDbs)
+      ]));
+
+      const entries = [];
+      for (const name of allDbNames) {
+        const ranked = rankedCandidates.find(c => c.database === name);
+        const excluded = excludedCandidates.find(c => c.database === name);
+        const evalData = realEvalDbs[name] || {};
+        const metrics = evalData.metrics || {};
+
+        const getMetricVal = (key) => {
+          if (metrics[key] && typeof metrics[key].value === "number") {
+            return metrics[key].value;
+          }
+          return null;
+        };
+
+        entries.push({
+          name: name.toUpperCase(),
+          rawName: name,
+          isWinner: (name === bestCandidateName),
+          isExcluded: !!excluded,
+          rank: ranked ? ranked.rank : 99,
+          avgLatency: getMetricVal("average_latency"),
+          throughput: getMetricVal("throughput"),
+          successRate: getMetricVal("success_rate"),
+          accuracy: getMetricVal("accuracy") ?? getMetricVal("precision") ?? getMetricVal("recall"),
+          totalOps: getMetricVal("total_operations"),
+          successfulOps: getMetricVal("successful_operations")
+        });
+      }
+
+      // Helper to build column slots in a plot viewport
+      function buildColumnSet(items, plotEl, axisEl, getValFn, formatValFn, isLowerBetter = false) {
+        plotEl.innerHTML = "";
+        axisEl.innerHTML = "";
+
+        const validItems = items.filter(d => getValFn(d) !== null);
+        if (validItems.length === 0) {
+          plotEl.innerHTML = '<div style="color: var(--text-dim); padding: 1rem;">NO DATA RECORDED</div>';
+          return;
+        }
+
+        // Determine max value for height scaling
+        const rawValues = validItems.map(d => getValFn(d));
+        const maxVal = Math.max(...rawValues) || 1.0;
+
+        for (const item of validItems) {
+          const val = getValFn(item);
+          let pctHeight = 0;
+          if (maxVal > 0) {
+            pctHeight = (val / maxVal) * 100;
+          }
+          // Clamp minimum 5% height so small bars remain visible
+          if (pctHeight < 5 && val > 0) pctHeight = 5;
+
+          const slot = document.createElement("div");
+          slot.className = "col-slot";
+
+          // Top Marker if winner
+          const markerTop = document.createElement("div");
+          markerTop.className = "col-marker-top";
+          if (item.isWinner) {
+            markerTop.textContent = "▲ TOP";
+          } else {
+            markerTop.innerHTML = "&nbsp;";
+          }
+          slot.appendChild(markerTop);
+
+          // Value label
+          const valLabel = document.createElement("div");
+          valLabel.className = "col-val-text";
+          valLabel.textContent = formatValFn(val, item);
+          slot.appendChild(valLabel);
+
+          // Pillar column
+          const pillar = document.createElement("div");
+          let pillarClass = "pillar-normal";
+          if (item.isWinner) {
+            pillarClass = "pillar-winner";
+          } else if (item.isExcluded) {
+            pillarClass = "pillar-excluded";
+          }
+          pillar.className = `col-pillar ${pillarClass}`;
+          slot.appendChild(pillar);
+
+          plotEl.appendChild(slot);
+
+          // X-Axis tick & name
+          const axisCell = document.createElement("div");
+          axisCell.className = "col-xaxis-cell";
+          axisCell.innerHTML = `
+            <div class="col-tick-cross">+</div>
+            <div class="col-db-label">${item.name}</div>
+          `;
+          axisEl.appendChild(axisCell);
+
+          // Animate height
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              pillar.style.height = `${pctHeight.toFixed(1)}%`;
+            });
+          });
+        }
+      }
+
+      // 1. Average Latency (Lower is better: sort lowest latency first)
+      const latencySorted = [...entries].sort((a, b) => (a.avgLatency ?? 999999) - (b.avgLatency ?? 999999));
+      buildColumnSet(
+        latencySorted,
+        chartLatencyPlot,
+        chartLatencyXAxis,
+        d => d.avgLatency,
+        v => (v < 0.05 ? v.toFixed(3) : formatNumber(v, 2)) + "ms",
+        true
+      );
+
+      // 2. Throughput (Higher is better: sort highest first)
+      const throughputSorted = [...entries].sort((a, b) => (b.throughput ?? -1) - (a.throughput ?? -1));
+      buildColumnSet(
+        throughputSorted,
+        chartThroughputPlot,
+        chartThroughputXAxis,
+        d => d.throughput,
+        v => (v >= 1000 ? (v / 1000).toFixed(1) + "k" : formatNumber(v, 1)) + " op/s"
+      );
+
+      // 3. Success Rate
+      const successSorted = [...entries].sort((a, b) => (b.successRate ?? -1) - (a.successRate ?? -1));
+      buildColumnSet(
+        successSorted,
+        chartSuccessPlot,
+        chartSuccessXAxis,
+        d => d.successRate,
+        v => formatNumber(v, 1) + "%"
+      );
+
+      // 4. Accuracy / Recall (if reported)
+      const accValid = entries.filter(d => d.accuracy !== null);
+      if (accValid.length > 0) {
+        chartAccuracyCard.style.display = "block";
+        const accSorted = [...accValid].sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
+        buildColumnSet(
+          accSorted,
+          chartAccuracyPlot,
+          chartAccuracyXAxis,
+          d => d.accuracy,
+          v => formatNumber(v * 100, 1) + "%"
+        );
+      } else {
+        chartAccuracyCard.style.display = "none";
+      }
+    }
+
+    // --------------------------------------------------------------------------
+    // Validation Matrix Table
+    // --------------------------------------------------------------------------
+    function renderValidationTable(realEvalDbs, rankedCandidates, excludedCandidates, bestCandidateName) {
+      validationTableBody.innerHTML = "";
+
+      const allDbKeys = Array.from(new Set([
+        ...rankedCandidates.map(c => c.database),
+        ...excludedCandidates.map(c => c.database),
+        ...Object.keys(realEvalDbs)
+      ]));
+
+      // Sort by rank / status
+      allDbKeys.sort((a, b) => {
+        const candA = rankedCandidates.find(c => c.database === a);
+        const candB = rankedCandidates.find(c => c.database === b);
+        if (candA && candB) return (candA.rank || 99) - (candB.rank || 99);
+        if (candA && !candB) return -1;
+        if (!candA && candB) return 1;
+        return a.localeCompare(b);
+      });
+
+      for (const dbName of allDbKeys) {
+        const row = document.createElement("tr");
+        const evalInfo = realEvalDbs[dbName] || {};
+        const rankedCand = rankedCandidates.find(c => c.database === dbName);
+        const excludedCand = excludedCandidates.find(c => c.database === dbName);
+
+        const isWinner = (dbName === bestCandidateName);
+        const isExcluded = !!excludedCand || (rankedCand && rankedCand.status && typeof rankedCand.status === "object" && rankedCand.status.Excluded);
+
+        if (isWinner) row.className = "winner-row";
+        if (isExcluded) row.className = "excluded-row";
+
+        // Badges: Shape, fill, and text - NO COLOR
+        let validBadgeHtml = '<span class="badge-hud badge-solid-valid">VALID</span>';
+        let diagReason = "ALL BENCHMARK CONFORMANCE CHECKS PASSED.";
+
+        const rawValStatus = evalInfo.validation_status;
+        if (rawValStatus) {
+          if (typeof rawValStatus === "string") {
+            if (rawValStatus === "Valid") {
+              validBadgeHtml = '<span class="badge-hud badge-solid-valid">VALID</span>';
+            } else if (rawValStatus === "Skipped") {
+              validBadgeHtml = '<span class="badge-hud badge-dashed-skipped">SKIPPED</span>';
+              diagReason = "BENCHMARK EXECUTION SKIPPED FOR THIS TARGET.";
+            } else {
+              validBadgeHtml = '<span class="badge-hud badge-outline-invalid">INVALID</span>';
+              diagReason = rawValStatus.toUpperCase();
+            }
+          } else if (typeof rawValStatus === "object" && rawValStatus.Invalid) {
+            validBadgeHtml = '<span class="badge-hud badge-outline-invalid">INVALID</span>';
+            diagReason = String(rawValStatus.Invalid).toUpperCase();
+          }
+        }
+
+        if (excludedCand) {
+          let reasonStr = "";
+          if (excludedCand.status && typeof excludedCand.status === "object" && excludedCand.status.Excluded) {
+            reasonStr = excludedCand.status.Excluded;
+          } else if (excludedCand.explanation) {
+            reasonStr = excludedCand.explanation;
+          } else if (typeof excludedCand.status === "string") {
+            reasonStr = excludedCand.status;
+          }
+          if (reasonStr) diagReason = reasonStr.toUpperCase();
+        }
+
+        let eligBadgeHtml = '<span class="badge-hud badge-solid-eligible">ELIGIBLE</span>';
+        let rankText = "--";
+        let scoreText = "--";
+
+        if (isExcluded) {
+          eligBadgeHtml = '<span class="badge-hud badge-outline-excluded">EXCLUDED</span>';
+        } else if (rankedCand) {
+          rankText = rankedCand.rank ? `[ ${String(rankedCand.rank).padStart(2, "0")} ]` : "--";
+          scoreText = formatNumber(rankedCand.score, 2);
+        }
+
+        // 1. Rank
+        const tdRank = document.createElement("td");
+        tdRank.innerHTML = rankText !== "--" ? `<span class="rank-boxed-cell">${escapeHtml(rankText)}</span>` : "--";
+        row.appendChild(tdRank);
+
+        // 2. Database
+        const tdDb = document.createElement("td");
+        tdDb.className = "table-db-name";
+        tdDb.textContent = dbName.toUpperCase();
+        if (isWinner) {
+          tdDb.innerHTML += ' <span class="badge-hud badge-solid-valid" style="font-size: 0.65rem; margin-left: 0.35rem;">TOP</span>';
+        }
+        row.appendChild(tdDb);
+
+        // 3. Validation
+        const tdVal = document.createElement("td");
+        tdVal.innerHTML = validBadgeHtml;
+        row.appendChild(tdVal);
+
+        // 4. Eligibility
+        const tdElig = document.createElement("td");
+        tdElig.innerHTML = eligBadgeHtml;
+        row.appendChild(tdElig);
+
+        // 5. Score
+        const tdScore = document.createElement("td");
+        tdScore.style.fontVariantNumeric = "tabular-nums";
+        tdScore.style.fontWeight = "800";
+        tdScore.textContent = scoreText;
+        row.appendChild(tdScore);
+
+        // 6. Diagnostic reason
+        const tdReason = document.createElement("td");
+        tdReason.className = "table-diag-text";
+        tdReason.textContent = diagReason;
+        row.appendChild(tdReason);
+
+        validationTableBody.appendChild(row);
+      }
+    }
+
+    // --------------------------------------------------------------------------
+    // Metadata & Environment Telemetry
+    // --------------------------------------------------------------------------
+    function renderMetadata(env, dataset) {
+      // Top status bar telemetry
+      topOs.textContent = (env.os || "--").toUpperCase();
+      topExpId.textContent = env.experiment_id ? env.experiment_id.substring(0, 8) + "..." : "--";
+
+      const hash = dataset.dataset_hash || dataset.sha256_hash;
+      topHash.textContent = hash ? hash.substring(0, 10) + "..." : "--";
+
+      if (env.timestamp) {
+        try {
+          const d = new Date(env.timestamp);
+          topTime.textContent = d.toISOString().replace("T", " ").substring(0, 19) + " UTC";
+        } catch (e) {
+          topTime.textContent = env.timestamp;
+        }
+      } else {
+        topTime.textContent = "--";
+      }
+
+      // Detailed metadata pod
+      metaOs.textContent = (env.os || "--").toUpperCase();
+      metaCores.textContent = env.cpu_cores ? `${env.cpu_cores} CORES` : "--";
+      metaRam.textContent = env.total_ram_mb ? `${formatNumber(env.total_ram_mb, 0)} MB` : "--";
+      metaTime.textContent = topTime.textContent;
+      metaExpId.textContent = env.experiment_id || "--";
+
+      metaDatasetPath.textContent = dataset.path || "--";
+      metaDocCount.textContent = dataset.document_count ? `${formatNumber(dataset.document_count, 0)} DOCUMENTS` : "--";
+
+      const bytes = dataset.original_size_bytes ?? dataset.file_size_bytes;
+      if (bytes !== undefined && bytes !== null) {
+        const kb = (bytes / 1024).toFixed(2);
+        metaFileSize.textContent = `${kb} KB (${bytes} BYTES)`;
+      } else {
+        metaFileSize.textContent = "--";
+      }
+
+      metaFormat.textContent = (dataset.format || "--").toUpperCase();
+      metaHash.textContent = hash || "--";
+    }
+
+    // --------------------------------------------------------------------------
+    // Initial Load: Pre-load and render sample benchmark data
+    // --------------------------------------------------------------------------
+    window.addEventListener("DOMContentLoaded", () => {
+      jsonInput.value = EMBEDDED_SAMPLE_JSON;
+      charCount.textContent = `${EMBEDDED_SAMPLE_JSON.length.toLocaleString()} BYTES`;
+      renderDashboard();
+    });
+  </script>
+</body>
+</html>
